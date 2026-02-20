@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Energy Abundance Index | Rational Optimist Society</title>
+    <meta name="description" content="The ROS Energy Abundance Index ranks 217 countries by energy-enabled living standards. Explore the interactive map, rankings, and insights.">
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>%E2%9A%A1</text></svg>">
+
+    <link rel="stylesheet" href="styles.css?v=20260220">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="#" class="nav-logo">
+                <span class="logo-mark">ROS</span>
+                <span class="logo-text">Energy Abundance Index</span>
+            </a>
+            <div class="nav-links">
+                <a href="#map" class="nav-link">Map</a>
+                <a href="#rankings" class="nav-link">Rankings</a>
+                <a href="#insights" class="nav-link">Insights</a>
+                <a href="#methodology" class="nav-link">Methodology</a>
+                <a href="#compare" class="nav-link">Compare</a>
+                <a href="https://www.rationaloptimistsociety.com" target="_blank" rel="noopener" class="nav-link nav-link-ros">ROS</a>
+            </div>
+            <button class="mobile-menu-btn" aria-label="Menu" id="mobile-menu-btn">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobile-menu">
+        <a href="#map" class="mobile-link">Map</a>
+        <a href="#rankings" class="mobile-link">Rankings</a>
+        <a href="#insights" class="mobile-link">Insights</a>
+        <a href="#methodology" class="mobile-link">Methodology</a>
+        <a href="#compare" class="mobile-link">Compare</a>
+        <a href="https://www.rationaloptimistsociety.com" target="_blank" rel="noopener" class="mobile-link">ROS</a>
+    </div>
+
+    <!-- Hero Section -->
+    <header class="hero">
+        <div class="hero-bg-grid"></div>
+        <div class="hero-content">
+            <p class="hero-eyebrow">RATIONAL OPTIMIST SOCIETY</p>
+            <h1 class="hero-title">Energy Abundance Index</h1>
+            <p class="hero-subtitle">A 0&ndash;100 index of energy-enabled living standards across 217 countries. Not dollars. Not promises. <em>Energy per person.</em></p>
+            <div class="hero-stats">
+                <div class="stat">
+                    <span class="stat-number">217</span>
+                    <span class="stat-label">Countries</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat">
+                    <span class="stat-number">2,457x</span>
+                    <span class="stat-label">Electricity Gap</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat">
+                    <span class="stat-number">r&asymp;0.01</span>
+                    <span class="stat-label">Clean vs Abundant</span>
+                </div>
+            </div>
+            <div class="hero-actions">
+                <a href="#map" class="btn primary">Explore the Map</a>
+                <a href="#rankings" class="btn secondary">View Rankings</a>
+            </div>
+        </div>
+
+        <!-- Scrolling Headline Ticker -->
+        <div class="headline-ticker">
+            <div class="ticker-track">
+                <span class="ticker-item">Iceland #1 (100.0)</span>
+                <span class="ticker-sep">&bull;</span>
+                <span class="ticker-item">Norway #2 (98.4)</span>
+                <span class="ticker-sep">&bull;</span>
+                <span class="ticker-item">Sweden #3 (94.6)</span>
+                <span class="ticker-sep">&bull;</span>
+                <span class="ticker-item">United States #8 (89.4)</span>
+                <span class="ticker-sep">&bull;</span>
+                <span class="ticker-item">China #52 (75.5)</span>
+                <span class="ticker-sep">&bull;</span>
+                <span class="ticker-item">India #148 (46.5)</span>
+                <span class="ticker-sep">&bull;</span>
+                <span class="ticker-item">Nigeria #194 (16.0)</span>
+                <span class="ticker-sep">&bull;</span>
+                <span class="ticker-item">Niger #217 (0.16)</span>
+                <span class="ticker-sep">&bull;</span>
+                <span class="ticker-item">Electricity gap: 2,457x between top and bottom</span>
+                <span class="ticker-sep">&bull;</span>
+                <span class="ticker-item">Clean energy &amp; abundance barely correlate (r&asymp;0.01)</span>
+                <span class="ticker-sep">&bull;</span>
+                <!-- Duplicate for seamless loop -->
+                <span class="ticker-item">Iceland #1 (100.0)</span>
+                <span class="ticker-sep">&bull;</span>
+                <span class="ticker-item">Norway #2 (98.4)</span>
+                <span class="ticker-sep">&bull;</span>
+                <span class="ticker-item">Sweden #3 (94.6)</span>
+                <span class="ticker-sep">&bull;</span>
+                <span class="ticker-item">United States #8 (89.4)</span>
+                <span class="ticker-sep">&bull;</span>
+                <span class="ticker-item">China #52 (75.5)</span>
+                <span class="ticker-sep">&bull;</span>
+                <span class="ticker-item">India #148 (46.5)</span>
+                <span class="ticker-sep">&bull;</span>
+                <span class="ticker-item">Nigeria #194 (16.0)</span>
+                <span class="ticker-sep">&bull;</span>
+                <span class="ticker-item">Niger #217 (0.16)</span>
+                <span class="ticker-sep">&bull;</span>
+                <span class="ticker-item">Electricity gap: 2,457x between top and bottom</span>
+                <span class="ticker-sep">&bull;</span>
+                <span class="ticker-item">Clean energy &amp; abundance barely correlate (r&asymp;0.01)</span>
+                <span class="ticker-sep">&bull;</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Quick Glance: Top & Bottom -->
+    <section class="glance-section">
+        <div class="container">
+            <div class="glance-grid">
+                <div class="glance-card glance-top">
+                    <h3 class="glance-title">Most Energy Abundant</h3>
+                    <div class="glance-list" id="top-10-list"></div>
+                </div>
+                <div class="glance-card glance-bottom">
+                    <h3 class="glance-title">Most Energy Scarce</h3>
+                    <div class="glance-list" id="bottom-10-list"></div>
+                </div>
+                <div class="glance-card glance-major">
+                    <h3 class="glance-title">Major Economies</h3>
+                    <div class="glance-list" id="major-economies-list"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Interactive World Map -->
+    <section id="map" class="map-section">
+        <div class="container">
+            <div class="section-header">
+                <p class="section-eyebrow">GLOBAL VIEW</p>
+                <h2>Energy Abundance World Map</h2>
+                <p>Hover or click any country to see its energy abundance score and key metrics.</p>
+            </div>
+        </div>
+        <div class="map-wrapper">
+            <div id="world-map"></div>
+            <div class="map-legend-bar">
+                <span class="legend-label">0</span>
+                <div class="legend-gradient"></div>
+                <span class="legend-label">100</span>
+                <span class="legend-desc">ROS-EAI Score</span>
+            </div>
+            <div class="map-tooltip" id="map-tooltip"></div>
+        </div>
+    </section>
+
+    <!-- Rankings Table -->
+    <section id="rankings" class="rankings-section">
+        <div class="container">
+            <div class="section-header">
+                <p class="section-eyebrow">FULL RANKINGS</p>
+                <h2>217 Countries Ranked</h2>
+                <p>Search, filter, and sort every country in the index.</p>
+            </div>
+
+            <!-- Filter Bar -->
+            <div class="filter-bar">
+                <div class="search-wrapper">
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                    <input type="text" id="search-input" placeholder="Search countries..." class="search-input">
+                </div>
+                <select id="region-filter" class="filter-select">
+                    <option value="all">All Regions</option>
+                    <option value="Africa">Africa</option>
+                    <option value="Asia">Asia</option>
+                    <option value="Central Asia">Central Asia</option>
+                    <option value="Europe">Europe</option>
+                    <option value="Middle East">Middle East</option>
+                    <option value="North America">North America</option>
+                    <option value="Oceania">Oceania</option>
+                    <option value="South America">South America</option>
+                </select>
+                <select id="sort-select" class="filter-select">
+                    <option value="rank-asc">Rank: Best First</option>
+                    <option value="rank-desc">Rank: Worst First</option>
+                    <option value="name-asc">Name: A-Z</option>
+                    <option value="name-desc">Name: Z-A</option>
+                    <option value="electricity-desc">Electricity: Highest</option>
+                    <option value="energy-desc">Primary Energy: Highest</option>
+                    <option value="electrification-desc">Electrification: Highest</option>
+                    <option value="gdp-desc">GDP/Capita: Highest</option>
+                    <option value="lowcarbon-desc">Low-Carbon: Highest</option>
+                </select>
+                <div class="filter-meta">
+                    <span class="results-count" id="results-count">217 countries</span>
+                    <button class="btn-reset" id="reset-filters">Reset</button>
+                    <button class="btn-export" id="export-csv">Export CSV</button>
+                </div>
+            </div>
+
+            <!-- Rankings Table -->
+            <div class="table-wrapper">
+                <table class="rankings-table" id="rankings-table">
+                    <thead>
+                        <tr>
+                            <th class="th-rank">Rank</th>
+                            <th class="th-country">Country</th>
+                            <th class="th-score">Score</th>
+                            <th class="th-bar"><!-- bar --></th>
+                            <th class="th-elec">Electricity/Person</th>
+                            <th class="th-energy">Primary Energy/Person</th>
+                            <th class="th-ratio">Electrification</th>
+                            <th class="th-gdp">GDP/Capita</th>
+                            <th class="th-clean">Low-Carbon</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rankings-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Key Insights -->
+    <section id="insights" class="insights-section">
+        <div class="container">
+            <div class="section-header">
+                <p class="section-eyebrow">KEY INSIGHTS</p>
+                <h2>What the Data Reveals</h2>
+                <p>Surprising findings from ranking 217 countries by energy abundance.</p>
+            </div>
+
+            <div class="insights-grid">
+                <div class="insight-card insight-featured">
+                    <div class="insight-number">2,457x</div>
+                    <h3 class="insight-title">The Electricity Gap</h3>
+                    <p class="insight-body">Iceland uses <strong>51,915 kWh/person/year</strong> (~5.9 kW per person). Chad uses <strong>21 kWh/person/year</strong> (~2.4 watts per person). That's a 2,457-fold gap in electricity access &mdash; far larger than income inequality alone would suggest.</p>
+                </div>
+
+                <div class="insight-card">
+                    <div class="insight-icon">r&asymp;0.01</div>
+                    <h3 class="insight-title">Clean &#8800; Abundant</h3>
+                    <p class="insight-body">The correlation between low-carbon electricity share and energy abundance is essentially zero. Bermuda ranks #5 on the index but gets only 1.6% of electricity from low-carbon sources. You can be rich in energy without being clean &mdash; and vice versa.</p>
+                </div>
+
+                <div class="insight-card">
+                    <div class="insight-icon">#1 &#8594; #17</div>
+                    <h3 class="insight-title">Qatar's Hidden Truth</h3>
+                    <p class="insight-body">Qatar is #1 in raw energy per person but drops to #17 on the index. Why? Its electrification ratio is only 0.089 &mdash; most of that energy never shows up as usable electricity for citizens.</p>
+                </div>
+
+                <div class="insight-card">
+                    <div class="insight-icon">2.4W</div>
+                    <h3 class="insight-title">Energy Poverty in Watts</h3>
+                    <p class="insight-body">Chad's electricity use averages 2.4 watts per person across its entire economy. That's less than a single LED bulb running continuously. Energy poverty is measured in single-digit watts.</p>
+                </div>
+
+                <div class="insight-card">
+                    <div class="insight-icon">#136&#8594;#75</div>
+                    <h3 class="insight-title">Paraguay's Electrification</h3>
+                    <p class="insight-body">Paraguay ranks #136 on raw energy per person but jumps to #75 on the index. Its electrification ratio of 0.857 is the world's highest &mdash; nearly all energy shows up as usable electricity thanks to massive hydropower.</p>
+                </div>
+
+                <div class="insight-card">
+                    <div class="insight-icon">#24&#8594;#90</div>
+                    <h3 class="insight-title">Luxembourg Mirage</h3>
+                    <p class="insight-body">Luxembourg looks energy-rich in raw data (#24) but drops to #90 on the index. Its electrification ratio is just 0.037 &mdash; cross-border fuel sales massively inflate its primary energy per capita.</p>
+                </div>
+            </div>
+
+            <!-- Biggest Movers -->
+            <div class="movers-section">
+                <h3 class="movers-title">Biggest Rank Corrections vs. Raw Energy</h3>
+                <p class="movers-subtitle">The index corrects for export distortions, fuel bunkering, and cross-border sales.</p>
+                <div class="movers-grid">
+                    <div class="movers-card">
+                        <h4 class="movers-card-title movers-down">Biggest Drops</h4>
+                        <div class="movers-list" id="movers-drops"></div>
+                    </div>
+                    <div class="movers-card">
+                        <h4 class="movers-card-title movers-up">Biggest Rises</h4>
+                        <div class="movers-list" id="movers-rises"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Country Comparison Tool -->
+    <section id="compare" class="compare-section">
+        <div class="container">
+            <div class="section-header">
+                <p class="section-eyebrow">COMPARE</p>
+                <h2>Country Comparison Tool</h2>
+                <p>Select up to 4 countries to compare side-by-side.</p>
+            </div>
+            <div class="compare-selectors" id="compare-selectors">
+                <select class="compare-select" id="compare-1">
+                    <option value="">Select a country...</option>
+                </select>
+                <select class="compare-select" id="compare-2">
+                    <option value="">Select a country...</option>
+                </select>
+                <select class="compare-select" id="compare-3">
+                    <option value="">Select a country...</option>
+                </select>
+                <select class="compare-select" id="compare-4">
+                    <option value="">Select a country...</option>
+                </select>
+            </div>
+            <div class="compare-results" id="compare-results"></div>
+        </div>
+    </section>
+
+    <!-- Scatter Plot / Chart Section -->
+    <section id="charts" class="charts-section">
+        <div class="container">
+            <div class="section-header">
+                <p class="section-eyebrow">VISUALIZE</p>
+                <h2>Energy Abundance Explorer</h2>
+                <p>Interactive scatter plot &mdash; choose axes to reveal relationships.</p>
+            </div>
+            <div class="chart-controls">
+                <div class="chart-control">
+                    <label>X-Axis</label>
+                    <select id="chart-x">
+                        <option value="gdpPerCapita">GDP per Capita ($)</option>
+                        <option value="primaryEnergy">Primary Energy (kWh/person)</option>
+                        <option value="electricityPerCapita">Electricity (kWh/person)</option>
+                        <option value="electrificationRatio">Electrification Ratio</option>
+                        <option value="lowCarbonShare">Low-Carbon Share (%)</option>
+                        <option value="score">ROS-EAI Score</option>
+                    </select>
+                </div>
+                <div class="chart-control">
+                    <label>Y-Axis</label>
+                    <select id="chart-y">
+                        <option value="score" selected>ROS-EAI Score</option>
+                        <option value="gdpPerCapita">GDP per Capita ($)</option>
+                        <option value="primaryEnergy">Primary Energy (kWh/person)</option>
+                        <option value="electricityPerCapita">Electricity (kWh/person)</option>
+                        <option value="electrificationRatio">Electrification Ratio</option>
+                        <option value="lowCarbonShare">Low-Carbon Share (%)</option>
+                    </select>
+                </div>
+                <div class="chart-control">
+                    <label>Color By</label>
+                    <select id="chart-color">
+                        <option value="region" selected>Region</option>
+                        <option value="score">ROS-EAI Score</option>
+                        <option value="lowCarbonShare">Low-Carbon Share</option>
+                    </select>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="scatter-chart" width="1100" height="500"></canvas>
+                <div class="chart-tooltip" id="chart-tooltip"></div>
+            </div>
+            <div class="chart-legend" id="chart-legend"></div>
+        </div>
+    </section>
+
+    <!-- Regional Breakdown -->
+    <section id="regional" class="regional-section">
+        <div class="container">
+            <div class="section-header">
+                <p class="section-eyebrow">REGIONAL VIEW</p>
+                <h2>Regional Breakdown</h2>
+                <p>Average scores and metrics by region.</p>
+            </div>
+            <div class="regional-grid" id="regional-grid"></div>
+        </div>
+    </section>
+
+    <!-- Methodology -->
+    <section id="methodology" class="methodology-section">
+        <div class="container">
+            <div class="section-header">
+                <p class="section-eyebrow">METHODOLOGY</p>
+                <h2>How the Index Works</h2>
+                <p>Transparent, reproducible, and designed to be hard to game.</p>
+            </div>
+
+            <div class="method-grid">
+                <div class="method-card">
+                    <div class="method-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                    </div>
+                    <h3>Electricity per Person</h3>
+                    <p>High-quality energy services. Log-scaled, winsorized min-max normalization (5th-95th percentile). <strong>50% of System Score.</strong></p>
+                </div>
+                <div class="method-card">
+                    <div class="method-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                    </div>
+                    <h3>Primary Energy per Person</h3>
+                    <p>Total energy throughput per capita. Log-scaled, same normalization. <strong>30% of System Score.</strong></p>
+                </div>
+                <div class="method-card">
+                    <div class="method-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                    </div>
+                    <h3>Electrification Ratio</h3>
+                    <p>Electricity / primary energy. Proxy for modern, usable energy delivery. Winsorized min-max. <strong>20% of System Score.</strong></p>
+                </div>
+                <div class="method-card">
+                    <div class="method-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 2v10l7-7"/></svg>
+                    </div>
+                    <h3>GDP Adjustment (Lived Score)</h3>
+                    <p>The published "Lived" score blends 80% System Score with 20% GDP per capita (log-scaled) to reduce cases where energy use is dominated by exports or heavy industry.</p>
+                </div>
+            </div>
+
+            <div class="method-formula">
+                <h3>Score Formulas</h3>
+                <div class="formula-block">
+                    <div class="formula-label">System Score</div>
+                    <div class="formula-eq">= 0.50 &times; Electricity<sub>subscore</sub> + 0.30 &times; Energy<sub>subscore</sub> + 0.20 &times; Electrification<sub>subscore</sub></div>
+                </div>
+                <div class="formula-block">
+                    <div class="formula-label">Lived Score</div>
+                    <div class="formula-eq">= System Score<sup>0.80</sup> &times; GDP<sub>subscore</sub><sup>0.20</sup></div>
+                </div>
+                <p class="formula-note">Low-carbon electricity share is tracked for context but is <strong>not</strong> part of the scoring formula. Data from <a href="https://github.com/owid/energy-data" target="_blank" rel="noopener">OWID Energy Data</a> (2022-2023).</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- What is Energy Abundance -->
+    <section class="about-section">
+        <div class="container">
+            <div class="about-grid">
+                <div class="about-text">
+                    <p class="section-eyebrow">WHY ENERGY?</p>
+                    <h2>Energy Is the Master Resource</h2>
+                    <p>Money is noisy. GDP per capita fluctuates with currency markets, financial flows, and statistical revisions. But energy &mdash; how many kilowatt-hours of electricity and primary energy each person has access to &mdash; is a more direct measure of material living standards.</p>
+                    <p>The ROS Energy Abundance Index was built to answer a simple question: <strong>How energy-rich is life for the average person in each country?</strong></p>
+                    <p>Traditional energy rankings are misleading. A country can look energy-rich simply because it exports oil or refines fuel for ships. The ROS-EAI corrects for these distortions by emphasizing <em>electricity per person</em> and the <em>electrification ratio</em> &mdash; measures that track usable energy services rather than raw throughput.</p>
+                </div>
+                <div class="about-callouts">
+                    <div class="callout-card">
+                        <span class="callout-number">51,915</span>
+                        <span class="callout-unit">kWh/person/year</span>
+                        <span class="callout-label">Iceland's electricity use</span>
+                    </div>
+                    <div class="callout-card callout-card-dim">
+                        <span class="callout-number">21</span>
+                        <span class="callout-unit">kWh/person/year</span>
+                        <span class="callout-label">Chad's electricity use</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Country Detail Modal -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal" id="country-modal">
+            <button class="modal-close" id="modal-close">&times;</button>
+            <div class="modal-content" id="modal-content"></div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <span class="logo-mark">ROS</span>
+                    <span>Energy Abundance Index</span>
+                </div>
+                <p class="footer-text">Built by the <a href="https://www.rationaloptimistsociety.com" target="_blank" rel="noopener">Rational Optimist Society</a></p>
+                <p class="footer-disclaimer">Data: OWID Energy Data (2022-2023), World Bank GDP (2024). Index methodology: ROS. Last updated February 2026.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="data.js?v=20260220"></script>
+    <script src="app.js?v=20260220"></script>
+</body>
+</html>
