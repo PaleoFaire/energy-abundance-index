@@ -171,6 +171,100 @@
     '900':'XKX'
   };
 
+  // Fix antimeridian-crossing polygons (Russia, Fiji, etc.)
+  // Splits any ring that jumps >180 degrees longitude into separate polygons
+  function fixAntimeridian(geojson) {
+    var fixedFeatures = [];
+    geojson.features.forEach(function(feature) {
+      var geom = feature.geometry;
+      if (!geom) { fixedFeatures.push(feature); return; }
+
+      if (geom.type === 'Polygon') {
+        var split = splitPolygonRings(geom.coordinates);
+        if (split.length === 1) {
+          fixedFeatures.push(feature);
+        } else {
+          // Convert to MultiPolygon
+          fixedFeatures.push({
+            type: 'Feature',
+            id: feature.id,
+            properties: feature.properties,
+            geometry: { type: 'MultiPolygon', coordinates: split.map(function(r) { return [r]; }) }
+          });
+        }
+      } else if (geom.type === 'MultiPolygon') {
+        var allPolys = [];
+        geom.coordinates.forEach(function(polygon) {
+          var split = splitPolygonRings(polygon);
+          split.forEach(function(ring) { allPolys.push([ring]); });
+        });
+        fixedFeatures.push({
+          type: 'Feature',
+          id: feature.id,
+          properties: feature.properties,
+          geometry: { type: 'MultiPolygon', coordinates: allPolys }
+        });
+      } else {
+        fixedFeatures.push(feature);
+      }
+    });
+    return { type: 'FeatureCollection', features: fixedFeatures };
+  }
+
+  function splitPolygonRings(rings) {
+    // Only process the outer ring (index 0)
+    var outer = rings[0];
+    if (!outer || outer.length < 3) return [outer];
+
+    // Check if this ring crosses the antimeridian
+    var crosses = false;
+    for (var i = 1; i < outer.length; i++) {
+      if (Math.abs(outer[i][0] - outer[i-1][0]) > 180) {
+        crosses = true;
+        break;
+      }
+    }
+
+    if (!crosses) return [outer];
+
+    // Split into west (<0) and east (>0) segments
+    var westRing = [];
+    var eastRing = [];
+
+    for (var i = 0; i < outer.length; i++) {
+      var pt = outer[i];
+      var lng = pt[0];
+      var lat = pt[1];
+
+      if (lng > 0) {
+        eastRing.push([lng, lat]);
+        // Add boundary point to west ring
+        westRing.push([-180, lat]);
+      } else {
+        westRing.push([lng, lat]);
+        // Add boundary point to east ring
+        eastRing.push([180, lat]);
+      }
+    }
+
+    // Close rings if needed
+    var result = [];
+    if (eastRing.length >= 3) {
+      if (eastRing[0][0] !== eastRing[eastRing.length-1][0] || eastRing[0][1] !== eastRing[eastRing.length-1][1]) {
+        eastRing.push(eastRing[0]);
+      }
+      result.push(eastRing);
+    }
+    if (westRing.length >= 3) {
+      if (westRing[0][0] !== westRing[westRing.length-1][0] || westRing[0][1] !== westRing[westRing.length-1][1]) {
+        westRing.push(westRing[0]);
+      }
+      result.push(westRing);
+    }
+
+    return result.length > 0 ? result : [outer];
+  }
+
   function loadGeoJSON() {
     var url = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json';
     fetch(url)
@@ -186,13 +280,19 @@
           f.properties.ISO_A3 = NUM_TO_ISO3[numId] || numId;
         });
 
+        // Fix antimeridian-crossing countries (Russia, Fiji, etc.)
+        geojson = fixAntimeridian(geojson);
+
         renderChoropleth(geojson);
       })
       .catch(function(err) {
         console.warn('TopoJSON load failed, trying GeoJSON fallback:', err);
         fetch('https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson')
           .then(function(r) { return r.json(); })
-          .then(function(geojson) { renderChoropleth(geojson); })
+          .then(function(geojson) {
+            geojson = fixAntimeridian(geojson);
+            renderChoropleth(geojson);
+          })
           .catch(function() {
             console.warn('Could not load map data.');
           });
