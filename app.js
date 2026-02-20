@@ -284,6 +284,7 @@
         geojson = fixAntimeridian(geojson);
 
         renderChoropleth(geojson);
+        hideMapLoading();
       })
       .catch(function(err) {
         console.warn('TopoJSON load failed, trying GeoJSON fallback:', err);
@@ -292,9 +293,11 @@
           .then(function(geojson) {
             geojson = fixAntimeridian(geojson);
             renderChoropleth(geojson);
+            hideMapLoading();
           })
           .catch(function() {
             console.warn('Could not load map data.');
+            hideMapLoading();
           });
       });
   }
@@ -947,6 +950,102 @@
     }).join('');
   }
 
+  // ── Scroll-Triggered Animations ──
+  function initScrollAnimations() {
+    // Add animation classes to sections
+    var sections = document.querySelectorAll('.section-header, .glance-card, .insight-card, .method-card, .zone-card, .regional-card, .about-text, .about-callouts, .method-formula');
+    sections.forEach(function(el) {
+      el.classList.add('animate-on-scroll');
+    });
+
+    // Add stagger to grids
+    var grids = document.querySelectorAll('.zones-grid, .insights-grid, .method-grid');
+    grids.forEach(function(el) {
+      el.classList.add('animate-stagger');
+    });
+
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+    document.querySelectorAll('.animate-on-scroll, .animate-stagger').forEach(function(el) {
+      observer.observe(el);
+    });
+  }
+
+  // ── Counter Animation ──
+  function animateCounters() {
+    var stats = document.querySelectorAll('.stat-number');
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting && !entry.target.dataset.animated) {
+          entry.target.dataset.animated = 'true';
+          var text = entry.target.textContent;
+          // Only animate pure numbers
+          var num = parseInt(text.replace(/,/g, ''));
+          if (!isNaN(num) && num > 0 && text.indexOf('x') === -1 && text.indexOf('r') === -1) {
+            var start = 0;
+            var duration = 1200;
+            var startTime = null;
+            function step(ts) {
+              if (!startTime) startTime = ts;
+              var progress = Math.min((ts - startTime) / duration, 1);
+              var eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+              var current = Math.round(start + (num - start) * eased);
+              entry.target.textContent = current.toLocaleString('en-US');
+              if (progress < 1) requestAnimationFrame(step);
+            }
+            requestAnimationFrame(step);
+          }
+        }
+      });
+    }, { threshold: 0.5 });
+
+    stats.forEach(function(el) { observer.observe(el); });
+  }
+
+  // ── Reading Progress Bar ──
+  function initReadingProgress() {
+    var bar = document.getElementById('reading-progress');
+    if (!bar) return;
+    window.addEventListener('scroll', function() {
+      var h = document.documentElement.scrollHeight - window.innerHeight;
+      var pct = h > 0 ? (window.scrollY / h) * 100 : 0;
+      bar.style.width = pct + '%';
+    }, { passive: true });
+  }
+
+  // ── Back to Top ──
+  function initBackToTop() {
+    var btn = document.getElementById('back-to-top');
+    if (!btn) return;
+    window.addEventListener('scroll', function() {
+      if (window.scrollY > 600) {
+        btn.classList.add('visible');
+      } else {
+        btn.classList.remove('visible');
+      }
+    }, { passive: true });
+    btn.addEventListener('click', function() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+
+  // ── Map Loading State ──
+  function hideMapLoading() {
+    var loader = document.getElementById('map-loading');
+    if (loader) {
+      loader.style.opacity = '0';
+      loader.style.transition = 'opacity 0.3s ease';
+      setTimeout(function() { loader.style.display = 'none'; }, 300);
+    }
+  }
+
   // ── Initialization ──
   function init() {
     buildGlanceLists();
@@ -955,9 +1054,17 @@
     buildMovers();
     initComparison();
     buildRegional();
+    initReadingProgress();
+    initBackToTop();
 
     // Delay scatter chart to ensure canvas is ready
     setTimeout(drawScatter, 300);
+
+    // Delay animations to avoid flash
+    setTimeout(function() {
+      initScrollAnimations();
+      animateCounters();
+    }, 100);
 
     // Redraw chart on resize
     var resizeTimer;
