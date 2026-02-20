@@ -110,152 +110,93 @@
       worldCopyJump: true
     });
 
-    // Dark tile layer
+    // Dark tile layer (base)
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
       subdomains: 'abcd',
       maxZoom: 19
     }).addTo(worldMap);
 
-    // Labels on top
+    // Create a custom pane for labels so they render above the choropleth
+    worldMap.createPane('labels');
+    worldMap.getPane('labels').style.zIndex = 450;
+    worldMap.getPane('labels').style.pointerEvents = 'none';
+
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png', {
       subdomains: 'abcd',
       maxZoom: 19,
-      pane: 'overlayPane'
+      pane: 'labels'
     }).addTo(worldMap);
 
     // Load GeoJSON
     loadGeoJSON();
   }
 
+  // ISO numeric to ISO3 mapping for TopoJSON country IDs
+  var NUM_TO_ISO3 = {
+    '004':'AFG','008':'ALB','012':'DZA','016':'ASM','020':'AND','024':'AGO','028':'ATG',
+    '031':'AZE','032':'ARG','036':'AUS','040':'AUT','044':'BHS','048':'BHR','050':'BGD',
+    '051':'ARM','052':'BRB','056':'BEL','064':'BTN','068':'BOL','070':'BIH','072':'BWA',
+    '076':'BRA','084':'BLZ','090':'SLB','092':'VGB','096':'BRN','100':'BGR','104':'MMR',
+    '108':'BDI','112':'BLR','116':'KHM','120':'CMR','124':'CAN','132':'CPV','140':'CAF',
+    '144':'LKA','148':'TCD','152':'CHL','156':'CHN','170':'COL','174':'COM','178':'COG',
+    '180':'COD','184':'COK','188':'CRI','191':'HRV','192':'CUB','196':'CYP','203':'CZE',
+    '204':'BEN','208':'DNK','214':'DOM','218':'ECU','222':'SLV','226':'GNQ','231':'ETH',
+    '232':'ERI','233':'EST','242':'FJI','246':'FIN','250':'FRA','258':'PYF','262':'DJI',
+    '266':'GAB','268':'GEO','270':'GMB','275':'PSE','276':'DEU','288':'GHA','292':'GIB',
+    '296':'KIR','300':'GRC','304':'GRL','308':'GRD','316':'GUM','320':'GTM','324':'GIN',
+    '328':'GUY','332':'HTI','340':'HND','344':'HKG','348':'HUN','352':'ISL','356':'IND',
+    '360':'IDN','364':'IRN','368':'IRQ','372':'IRL','376':'ISR','380':'ITA','384':'CIV',
+    '388':'JAM','392':'JPN','398':'KAZ','400':'JOR','404':'KEN','408':'PRK','410':'KOR',
+    '414':'KWT','417':'KGZ','418':'LAO','422':'LBN','426':'LSO','428':'LVA','430':'LBR',
+    '434':'LBY','438':'LIE','440':'LTU','442':'LUX','450':'MDG','454':'MWI','458':'MYS',
+    '462':'MDV','466':'MLI','470':'MLT','478':'MRT','480':'MUS','484':'MEX','496':'MNG',
+    '498':'MDA','499':'MNE','504':'MAR','508':'MOZ','512':'OMN','516':'NAM','520':'NRU',
+    '524':'NPL','528':'NLD','540':'NCL','548':'VUT','554':'NZL','558':'NIC','562':'NER',
+    '566':'NGA','570':'NIU','578':'NOR','586':'PAK','591':'PAN','598':'PNG','600':'PRY',
+    '604':'PER','608':'PHL','616':'POL','620':'PRT','630':'PRI','634':'QAT','642':'ROU',
+    '643':'RUS','646':'RWA','659':'KNA','662':'LCA','670':'VCT','674':'SMR',
+    '678':'STP','682':'SAU','686':'SEN','688':'SRB','690':'SYC','694':'SLE','702':'SGP',
+    '703':'SVK','704':'VNM','705':'SVN','706':'SOM','710':'ZAF','716':'ZWE','724':'ESP',
+    '728':'SSD','729':'SDN','740':'SUR','748':'SWZ','752':'SWE','756':'CHE','760':'SYR',
+    '762':'TJK','764':'THA','768':'TGO','776':'TON','780':'TTO','784':'ARE','788':'TUN',
+    '792':'TUR','795':'TKM','798':'TUV','800':'UGA','804':'UKR','807':'MKD','818':'EGY',
+    '826':'GBR','834':'TZA','840':'USA','854':'BFA','858':'URY','860':'UZB','862':'VEN',
+    '882':'WSM','887':'YEM','894':'ZMB',
+    '158':'TWN','-99':'CYP','732':'ESH',
+    '010':'ATA','074':'BVT','162':'CXI','166':'CCK','238':'FLK','254':'GUF',
+    '260':'GFS','312':'GLP','474':'MTQ','175':'MYT','533':'ABW','531':'CUW',
+    '534':'SXM','535':'BES','796':'TCA','136':'CYM','060':'BMU',
+    '580':'MNP','316':'GUM','850':'VIR','663':'MSR','654':'SHN',
+    '234':'FRO','831':'GGY','832':'JEY','833':'IMN',
+    '900':'XKX'
+  };
+
   function loadGeoJSON() {
-    // Use a lightweight world GeoJSON
     var url = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json';
     fetch(url)
       .then(function(r) { return r.json(); })
       .then(function(topology) {
-        // Convert TopoJSON to GeoJSON
-        var geojson = topojsonFeature(topology, topology.objects.countries);
+        // Use the proper topojson-client library to decode
+        var geojson = topojson.feature(topology, topology.objects.countries);
+
+        // Inject ISO3 codes from numeric IDs
+        geojson.features.forEach(function(f) {
+          var numId = String(f.id || (f.properties && f.properties.id) || '');
+          f.properties = f.properties || {};
+          f.properties.ISO_A3 = NUM_TO_ISO3[numId] || numId;
+        });
+
         renderChoropleth(geojson);
       })
-      .catch(function() {
-        // Fallback: try natural earth geojson
+      .catch(function(err) {
+        console.warn('TopoJSON load failed, trying GeoJSON fallback:', err);
         fetch('https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson')
           .then(function(r) { return r.json(); })
           .then(function(geojson) { renderChoropleth(geojson); })
           .catch(function() {
-            console.warn('Could not load map data. Showing markers instead.');
-            renderMarkers();
+            console.warn('Could not load map data.');
           });
       });
-  }
-
-  // Minimal TopoJSON decoder (for countries-110m.json)
-  function topojsonFeature(topology, object) {
-    var arcs = topology.arcs;
-    var transform = topology.transform;
-    var scale = transform ? transform.scale : [1, 1];
-    var translate = transform ? transform.translate : [0, 0];
-
-    function decodeArc(arcIndex) {
-      var arc = arcs[arcIndex < 0 ? ~arcIndex : arcIndex];
-      var coords = [];
-      var x = 0, y = 0;
-      for (var i = 0; i < arc.length; i++) {
-        x += arc[i][0];
-        y += arc[i][1];
-        coords.push([x * scale[0] + translate[0], y * scale[1] + translate[1]]);
-      }
-      if (arcIndex < 0) coords.reverse();
-      return coords;
-    }
-
-    function decodeRing(arcs) {
-      var coords = [];
-      for (var i = 0; i < arcs.length; i++) {
-        var arc = decodeArc(arcs[i]);
-        // Remove duplicate closing point from previous arc
-        if (i > 0) arc = arc.slice(1);
-        coords = coords.concat(arc);
-      }
-      return coords;
-    }
-
-    function decodePolygon(arcsArray) {
-      return arcsArray.map(decodeRing);
-    }
-
-    function decodeMultiPolygon(arcsArray) {
-      return arcsArray.map(decodePolygon);
-    }
-
-    // ISO numeric to ISO3 mapping
-    var numToISO3 = buildNumericToISO3();
-
-    var features = [];
-    var geometries = object.geometries;
-    for (var i = 0; i < geometries.length; i++) {
-      var geom = geometries[i];
-      var feature = {
-        type: 'Feature',
-        properties: {
-          ISO_A3: numToISO3[geom.id] || geom.id,
-          name: geom.properties ? geom.properties.name : ''
-        },
-        geometry: null
-      };
-
-      if (geom.type === 'Polygon') {
-        feature.geometry = { type: 'Polygon', coordinates: decodePolygon(geom.arcs) };
-      } else if (geom.type === 'MultiPolygon') {
-        feature.geometry = { type: 'MultiPolygon', coordinates: decodeMultiPolygon(geom.arcs) };
-      }
-
-      if (feature.geometry) features.push(feature);
-    }
-
-    return { type: 'FeatureCollection', features: features };
-  }
-
-  function buildNumericToISO3() {
-    // ISO 3166-1 numeric to alpha-3 (common countries)
-    return {
-      '004':'AFG','008':'ALB','012':'DZA','016':'ASM','020':'AND','024':'AGO','028':'ATG',
-      '031':'AZE','032':'ARG','036':'AUS','040':'AUT','044':'BHS','048':'BHR','050':'BGD',
-      '051':'ARM','052':'BRB','056':'BEL','064':'BTN','068':'BOL','070':'BIH','072':'BWA',
-      '076':'BRA','084':'BLZ','090':'SLB','092':'VGB','096':'BRN','100':'BGR','104':'MMR',
-      '108':'BDI','112':'BLR','116':'KHM','120':'CMR','124':'CAN','132':'CPV','140':'CAF',
-      '144':'LKA','148':'TCD','152':'CHL','156':'CHN','170':'COL','174':'COM','178':'COG',
-      '180':'COD','184':'COK','188':'CRI','191':'HRV','192':'CUB','196':'CYP','203':'CZE',
-      '204':'BEN','208':'DNK','214':'DOM','218':'ECU','222':'SLV','226':'GNQ','231':'ETH',
-      '232':'ERI','233':'EST','242':'FJI','246':'FIN','250':'FRA','258':'PYF','262':'DJI',
-      '266':'GAB','268':'GEO','270':'GMB','275':'PSE','276':'DEU','288':'GHA','292':'GIB',
-      '296':'KIR','300':'GRC','304':'GRL','308':'GRD','316':'GUM','320':'GTM','324':'GIN',
-      '328':'GUY','332':'HTI','340':'HND','344':'HKG','348':'HUN','352':'ISL','356':'IND',
-      '360':'IDN','364':'IRN','368':'IRQ','372':'IRL','376':'ISR','380':'ITA','384':'CIV',
-      '388':'JAM','392':'JPN','398':'KAZ','400':'JOR','404':'KEN','408':'PRK','410':'KOR',
-      '414':'KWT','417':'KGZ','418':'LAO','422':'LBN','426':'LSO','428':'LVA','430':'LBR',
-      '434':'LBY','438':'LIE','440':'LTU','442':'LUX','450':'MDG','454':'MWI','458':'MYS',
-      '462':'MDV','466':'MLI','470':'MLT','478':'MRT','480':'MUS','484':'MEX','496':'MNG',
-      '498':'MDA','499':'MNE','504':'MAR','508':'MOZ','512':'OMN','516':'NAM','520':'NRU',
-      '524':'NPL','528':'NLD','540':'NCL','548':'VUT','554':'NZL','558':'NIC','562':'NER',
-      '566':'NGA','570':'NIU','578':'NOR','586':'PAK','591':'PAN','598':'PNG','600':'PRY',
-      '604':'PER','608':'PHL','616':'POL','620':'PRT','630':'PRI','634':'QAT','642':'ROU',
-      '643':'RUS','646':'RWA','659':'KNA','662':'LCA','670':'VCT','674':'SMR',
-      '678':'STP','682':'SAU','686':'SEN','688':'SRB','690':'SYC','694':'SLE','702':'SGP',
-      '703':'SVK','704':'VNM','705':'SVN','706':'SOM','710':'ZAF','716':'ZWE','724':'ESP',
-      '728':'SSD','729':'SDN','740':'SUR','748':'SWZ','752':'SWE','756':'CHE','760':'SYR',
-      '762':'TJK','764':'THA','768':'TGO','776':'TON','780':'TTO','784':'ARE','788':'TUN',
-      '792':'TUR','795':'TKM','798':'TUV','800':'UGA','804':'UKR','807':'MKD','818':'EGY',
-      '826':'GBR','834':'TZA','840':'USA','854':'BFA','858':'URY','860':'UZB','862':'VEN',
-      '882':'WSM','887':'YEM','894':'ZMB',
-      '158':'TWN','-99':'CYP','732':'ESH',
-      '010':'ATA','074':'BVT','162':'CXI','166':'CCK','238':'FLK','254':'GUF',
-      '260':'GFS','312':'GLP','474':'MTQ','175':'MYT','533':'ABW','531':'CUW',
-      '534':'SXM','535':'BES','796':'TCA','136':'CYM','060':'BMU',
-      '580':'MNP','316':'GUM','850':'VIR','663':'MSR','654':'SHN',
-      '234':'FRO','831':'GGY','832':'JEY','833':'IMN',
-      '900':'XKX'
-    };
   }
 
   function getCountryColor(score) {
@@ -379,7 +320,9 @@
       if (currentRegion !== 'all' && getRegion(d.iso3) !== currentRegion) return false;
       if (currentSearch) {
         var q = currentSearch.toLowerCase();
-        return d.country.toLowerCase().indexOf(q) !== -1 || d.iso3.toLowerCase().indexOf(q) !== -1;
+        var name = (d.country || '').toLowerCase();
+        var iso = (d.iso3 || '').toLowerCase();
+        return name.indexOf(q) !== -1 || iso.indexOf(q) !== -1;
       }
       return true;
     });
@@ -803,13 +746,16 @@
 
   // Chart hover
   if (scatterCanvas) {
-    scatterCanvas.addEventListener('mousemove', function(e) {
-      if (!scatterCanvas._points) return;
+    function findClosestPoint(e, threshold) {
+      if (!scatterCanvas._points) return null;
       var rect = scatterCanvas.getBoundingClientRect();
-      var mx = e.clientX - rect.left;
-      var my = e.clientY - rect.top;
+      var scaleX = scatterCanvas.width / rect.width;
+      var scaleY = scatterCanvas.height / rect.height;
+      // Mouse position in CSS pixels (matches our drawing coordinates)
+      var mx = (e.clientX - rect.left);
+      var my = (e.clientY - rect.top);
       var closest = null;
-      var closestDist = 20; // pixel threshold
+      var closestDist = threshold || 20;
 
       scatterCanvas._points.forEach(function(p) {
         var dx = mx - p.px;
@@ -820,6 +766,11 @@
           closest = p;
         }
       });
+      return closest;
+    }
+
+    scatterCanvas.addEventListener('mousemove', function(e) {
+      var closest = findClosestPoint(e, 20);
 
       if (closest) {
         var d = closest.d;
@@ -844,23 +795,7 @@
     });
 
     scatterCanvas.addEventListener('click', function(e) {
-      if (!scatterCanvas._points) return;
-      var rect = scatterCanvas.getBoundingClientRect();
-      var mx = e.clientX - rect.left;
-      var my = e.clientY - rect.top;
-      var closest = null;
-      var closestDist = 20;
-
-      scatterCanvas._points.forEach(function(p) {
-        var dx = mx - p.px;
-        var dy = my - p.py;
-        var dist = Math.sqrt(dx*dx + dy*dy);
-        if (dist < closestDist) {
-          closestDist = dist;
-          closest = p;
-        }
-      });
-
+      var closest = findClosestPoint(e, 20);
       if (closest) openCountryModal(closest.d.iso3);
     });
 
