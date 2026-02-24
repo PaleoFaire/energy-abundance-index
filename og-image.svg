@@ -1,13 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#000000"/>
-      <stop offset="100%" stop-color="#050508"/>
-    </linearGradient>
-    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#10b981"/>
-      <stop offset="100%" stop-color="#34d399"/>
-    </linearGradient>
     <linearGradient id="bar" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0%" stop-color="#ef4444"/>
       <stop offset="35%" stop-color="#f59e0b"/>
@@ -16,11 +8,11 @@
     </linearGradient>
   </defs>
 
-  <!-- Background -->
-  <rect width="1200" height="630" fill="url(#bg)"/>
+  <!-- Background — warm white -->
+  <rect width="1200" height="630" fill="#FAFAF7"/>
 
-  <!-- Grid pattern -->
-  <g opacity="0.04" stroke="#10b981" stroke-width="1">
+  <!-- Subtle grid pattern -->
+  <g opacity="0.06" stroke="#10b981" stroke-width="0.5">
     <line x1="0" y1="60" x2="1200" y2="60"/>
     <line x1="0" y1="120" x2="1200" y2="120"/>
     <line x1="0" y1="180" x2="1200" y2="180"/>
@@ -52,92 +44,94 @@
   </g>
 
   <!-- Border -->
-  <rect x="0" y="0" width="1200" height="630" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+  <rect x="0" y="0" width="1200" height="630" fill="none" stroke="#E5E5E0" stroke-width="1"/>
 
   <!-- ROS Badge -->
   <rect x="80" y="80" width="60" height="30" rx="4" fill="#10b981"/>
-  <text x="110" y="100" font-family="sans-serif" font-weight="700" font-size="14" fill="#000" text-anchor="middle" letter-spacing="1">ROS</text>
+  <text x="110" y="100" font-family="Inter, sans-serif" font-weight="700" font-size="14" fill="#fff" text-anchor="middle" letter-spacing="1">ROS</text>
 
   <!-- Eyebrow -->
-  <text x="152" y="100" font-family="sans-serif" font-weight="600" font-size="13" fill="#10b981" letter-spacing="2">RATIONAL OPTIMIST SOCIETY</text>
+  <text x="152" y="100" font-family="Inter, sans-serif" font-weight="600" font-size="13" fill="#10b981" letter-spacing="2">RATIONAL OPTIMIST SOCIETY</text>
 
-  <!-- Title -->
-  <text x="80" y="180" font-family="sans-serif" font-weight="700" font-size="58" fill="#f0f0fa">Energy Abundance</text>
-  <text x="80" y="245" font-family="sans-serif" font-weight="700" font-size="58" fill="#f0f0fa">Index</text>
+  <!-- Title — Playfair Display style (serif) -->
+  <text x="80" y="180" font-family="Georgia, serif" font-weight="700" font-size="58" fill="#1A1A2E">Energy Abundance</text>
+  <text x="80" y="245" font-family="Georgia, serif" font-weight="700" font-size="58" fill="#1A1A2E">Index</text>
 
   <!-- Subtitle -->
-  <text x="80" y="295" font-family="sans-serif" font-weight="400" font-size="20" fill="rgba(240,240,250,0.6)">217 countries ranked 0-100 by energy-enabled living standards</text>
+  <text x="80" y="295" font-family="Inter, sans-serif" font-weight="400" font-size="20" fill="#4A4A68">217 countries ranked 0-100 by energy-enabled living standards</text>
 
   <!-- Stats row -->
   <g transform="translate(80, 360)">
     <!-- 217 Countries -->
-    <text x="0" y="0" font-family="sans-serif" font-weight="700" font-size="40" fill="#f0f0fa">217</text>
-    <text x="0" y="28" font-family="sans-serif" font-weight="600" font-size="12" fill="rgba(240,240,250,0.4)" letter-spacing="1">COUNTRIES</text>
+    <text x="0" y="0" font-family="Georgia, serif" font-weight="700" font-size="40" fill="#1A1A2E">217</text>
+    <text x="0" y="28" font-family="Inter, sans-serif" font-weight="600" font-size="12" fill="#8A8AA0" letter-spacing="1">COUNTRIES</text>
 
     <!-- Divider -->
-    <line x1="130" y1="-15" x2="130" y2="30" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+    <line x1="130" y1="-15" x2="130" y2="30" stroke="#E5E5E0" stroke-width="1"/>
 
     <!-- 2,457x gap -->
-    <text x="170" y="0" font-family="sans-serif" font-weight="700" font-size="40" fill="#10b981">2,457x</text>
-    <text x="170" y="28" font-family="sans-serif" font-weight="600" font-size="12" fill="rgba(240,240,250,0.4)" letter-spacing="1">ELECTRICITY GAP</text>
+    <text x="170" y="0" font-family="Georgia, serif" font-weight="700" font-size="40" fill="#10b981">2,457x</text>
+    <text x="170" y="28" font-family="Inter, sans-serif" font-weight="600" font-size="12" fill="#8A8AA0" letter-spacing="1">ELECTRICITY GAP</text>
 
     <!-- Divider -->
-    <line x1="400" y1="-15" x2="400" y2="30" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+    <line x1="400" y1="-15" x2="400" y2="30" stroke="#E5E5E0" stroke-width="1"/>
 
     <!-- r~0.01 -->
-    <text x="440" y="0" font-family="sans-serif" font-weight="700" font-size="40" fill="#f0f0fa">r&#x2248;0.01</text>
-    <text x="440" y="28" font-family="sans-serif" font-weight="600" font-size="12" fill="rgba(240,240,250,0.4)" letter-spacing="1">CLEAN VS ABUNDANT</text>
+    <text x="440" y="0" font-family="Georgia, serif" font-weight="700" font-size="40" fill="#1A1A2E">r&#x2248;0.01</text>
+    <text x="440" y="28" font-family="Inter, sans-serif" font-weight="600" font-size="12" fill="#8A8AA0" letter-spacing="1">CLEAN VS ABUNDANT</text>
   </g>
 
   <!-- Score gradient bar -->
   <rect x="80" y="450" width="500" height="10" rx="5" fill="url(#bar)"/>
-  <text x="80" y="480" font-family="sans-serif" font-weight="600" font-size="12" fill="rgba(240,240,250,0.4)">0</text>
-  <text x="580" y="480" font-family="sans-serif" font-weight="600" font-size="12" fill="rgba(240,240,250,0.4)" text-anchor="end">100</text>
-  <text x="330" y="480" font-family="sans-serif" font-weight="400" font-size="11" fill="rgba(240,240,250,0.3)" text-anchor="middle">ROS-EAI SCORE</text>
+  <text x="80" y="480" font-family="Inter, sans-serif" font-weight="600" font-size="12" fill="#8A8AA0">0</text>
+  <text x="580" y="480" font-family="Inter, sans-serif" font-weight="600" font-size="12" fill="#8A8AA0" text-anchor="end">100</text>
+  <text x="330" y="480" font-family="Inter, sans-serif" font-weight="400" font-size="11" fill="#B0B0B0" text-anchor="middle">ROS-EAI SCORE</text>
 
-  <!-- Top countries column -->
-  <g transform="translate(780, 80)">
-    <text x="0" y="0" font-family="sans-serif" font-weight="600" font-size="13" fill="#22c55e" letter-spacing="1">TOP RANKED</text>
+  <!-- Top countries column — on dark panel -->
+  <rect x="720" y="50" width="440" height="530" rx="12" fill="#0F172A"/>
 
-    <text x="0" y="40" font-family="sans-serif" font-weight="600" font-size="13" fill="rgba(240,240,250,0.4)">#1</text>
-    <text x="40" y="40" font-family="sans-serif" font-weight="500" font-size="16" fill="#f0f0fa">Iceland</text>
-    <text x="340" y="40" font-family="sans-serif" font-weight="700" font-size="16" fill="#22c55e" text-anchor="end">100.0</text>
+  <g transform="translate(760, 80)">
+    <text x="0" y="0" font-family="Inter, sans-serif" font-weight="600" font-size="13" fill="#22c55e" letter-spacing="1">TOP RANKED</text>
 
-    <text x="0" y="72" font-family="sans-serif" font-weight="600" font-size="13" fill="rgba(240,240,250,0.4)">#2</text>
-    <text x="40" y="72" font-family="sans-serif" font-weight="500" font-size="16" fill="#f0f0fa">Norway</text>
-    <text x="340" y="72" font-family="sans-serif" font-weight="700" font-size="16" fill="#22c55e" text-anchor="end">98.4</text>
+    <text x="0" y="40" font-family="Inter, sans-serif" font-weight="600" font-size="13" fill="rgba(240,240,250,0.4)">#1</text>
+    <text x="40" y="40" font-family="Inter, sans-serif" font-weight="500" font-size="16" fill="#F0F0FA">Iceland</text>
+    <text x="340" y="40" font-family="Inter, sans-serif" font-weight="700" font-size="16" fill="#22c55e" text-anchor="end">100.0</text>
 
-    <text x="0" y="104" font-family="sans-serif" font-weight="600" font-size="13" fill="rgba(240,240,250,0.4)">#3</text>
-    <text x="40" y="104" font-family="sans-serif" font-weight="500" font-size="16" fill="#f0f0fa">Sweden</text>
-    <text x="340" y="104" font-family="sans-serif" font-weight="700" font-size="16" fill="#22c55e" text-anchor="end">94.6</text>
+    <text x="0" y="72" font-family="Inter, sans-serif" font-weight="600" font-size="13" fill="rgba(240,240,250,0.4)">#2</text>
+    <text x="40" y="72" font-family="Inter, sans-serif" font-weight="500" font-size="16" fill="#F0F0FA">Norway</text>
+    <text x="340" y="72" font-family="Inter, sans-serif" font-weight="700" font-size="16" fill="#22c55e" text-anchor="end">98.4</text>
 
-    <text x="0" y="136" font-family="sans-serif" font-weight="600" font-size="13" fill="rgba(240,240,250,0.4)">#8</text>
-    <text x="40" y="136" font-family="sans-serif" font-weight="500" font-size="16" fill="#f0f0fa">United States</text>
-    <text x="340" y="136" font-family="sans-serif" font-weight="700" font-size="16" fill="#22c55e" text-anchor="end">89.4</text>
+    <text x="0" y="104" font-family="Inter, sans-serif" font-weight="600" font-size="13" fill="rgba(240,240,250,0.4)">#3</text>
+    <text x="40" y="104" font-family="Inter, sans-serif" font-weight="500" font-size="16" fill="#F0F0FA">Sweden</text>
+    <text x="340" y="104" font-family="Inter, sans-serif" font-weight="700" font-size="16" fill="#22c55e" text-anchor="end">94.6</text>
+
+    <text x="0" y="136" font-family="Inter, sans-serif" font-weight="600" font-size="13" fill="rgba(240,240,250,0.4)">#8</text>
+    <text x="40" y="136" font-family="Inter, sans-serif" font-weight="500" font-size="16" fill="#F0F0FA">United States</text>
+    <text x="340" y="136" font-family="Inter, sans-serif" font-weight="700" font-size="16" fill="#22c55e" text-anchor="end">89.4</text>
 
     <!-- Separator -->
     <line x1="0" y1="160" x2="340" y2="160" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
 
     <!-- Major economies -->
-    <text x="0" y="190" font-family="sans-serif" font-weight="600" font-size="13" fill="#f59e0b" letter-spacing="1">MAJOR ECONOMIES</text>
+    <text x="0" y="190" font-family="Inter, sans-serif" font-weight="600" font-size="13" fill="#f59e0b" letter-spacing="1">MAJOR ECONOMIES</text>
 
-    <text x="0" y="225" font-family="sans-serif" font-weight="600" font-size="13" fill="rgba(240,240,250,0.4)">#52</text>
-    <text x="48" y="225" font-family="sans-serif" font-weight="500" font-size="16" fill="#f0f0fa">China</text>
-    <text x="340" y="225" font-family="sans-serif" font-weight="700" font-size="16" fill="#84cc16" text-anchor="end">75.5</text>
+    <text x="0" y="225" font-family="Inter, sans-serif" font-weight="600" font-size="13" fill="rgba(240,240,250,0.4)">#52</text>
+    <text x="48" y="225" font-family="Inter, sans-serif" font-weight="500" font-size="16" fill="#F0F0FA">China</text>
+    <text x="340" y="225" font-family="Inter, sans-serif" font-weight="700" font-size="16" fill="#84cc16" text-anchor="end">75.5</text>
 
-    <text x="0" y="257" font-family="sans-serif" font-weight="600" font-size="13" fill="rgba(240,240,250,0.4)">#148</text>
-    <text x="48" y="257" font-family="sans-serif" font-weight="500" font-size="16" fill="#f0f0fa">India</text>
-    <text x="340" y="257" font-family="sans-serif" font-weight="700" font-size="16" fill="#f59e0b" text-anchor="end">46.5</text>
+    <text x="0" y="257" font-family="Inter, sans-serif" font-weight="600" font-size="13" fill="rgba(240,240,250,0.4)">#148</text>
+    <text x="48" y="257" font-family="Inter, sans-serif" font-weight="500" font-size="16" fill="#F0F0FA">India</text>
+    <text x="340" y="257" font-family="Inter, sans-serif" font-weight="700" font-size="16" fill="#f59e0b" text-anchor="end">46.5</text>
 
-    <text x="0" y="289" font-family="sans-serif" font-weight="600" font-size="13" fill="rgba(240,240,250,0.4)">#194</text>
-    <text x="48" y="289" font-family="sans-serif" font-weight="500" font-size="16" fill="#f0f0fa">Nigeria</text>
-    <text x="340" y="289" font-family="sans-serif" font-weight="700" font-size="16" fill="#ef4444" text-anchor="end">16.0</text>
+    <text x="0" y="289" font-family="Inter, sans-serif" font-weight="600" font-size="13" fill="rgba(240,240,250,0.4)">#194</text>
+    <text x="48" y="289" font-family="Inter, sans-serif" font-weight="500" font-size="16" fill="#F0F0FA">Nigeria</text>
+    <text x="340" y="289" font-family="Inter, sans-serif" font-weight="700" font-size="16" fill="#ef4444" text-anchor="end">16.0</text>
   </g>
 
   <!-- Bottom tag line -->
-  <text x="80" y="560" font-family="sans-serif" font-weight="400" font-size="16" fill="rgba(240,240,250,0.5)">Not dollars. Not promises.</text>
-  <text x="340" y="560" font-family="sans-serif" font-weight="600" font-size="16" fill="#10b981">Energy per person.</text>
+  <text x="80" y="560" font-family="Inter, sans-serif" font-weight="400" font-size="16" fill="#4A4A68">Not dollars. Not promises.</text>
+  <text x="340" y="560" font-family="Georgia, serif" font-weight="600" font-size="16" fill="#10b981" font-style="italic">Energy per person.</text>
 
   <!-- URL -->
-  <text x="1120" y="560" font-family="sans-serif" font-weight="400" font-size="13" fill="rgba(240,240,250,0.3)" text-anchor="end">paleofaire.github.io/energy-abundance-index</text>
+  <text x="1120" y="560" font-family="Inter, sans-serif" font-weight="400" font-size="13" fill="#8A8AA0" text-anchor="end">paleofaire.github.io/energy-abundance-index</text>
 </svg>

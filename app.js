@@ -953,13 +953,13 @@
   // ── Scroll-Triggered Animations ──
   function initScrollAnimations() {
     // Add animation classes to sections
-    var sections = document.querySelectorAll('.section-header, .glance-card, .insight-card, .method-card, .zone-card, .regional-card, .about-text, .about-callouts, .method-formula');
+    var sections = document.querySelectorAll('.insight-card, .insight-featured, .method-card, .zone-segment, .regional-card, .about-text, .about-callouts, .method-formula, .movers-card, .highlight-quote');
     sections.forEach(function(el) {
       el.classList.add('animate-on-scroll');
     });
 
     // Add stagger to grids
-    var grids = document.querySelectorAll('.zones-grid, .insights-grid, .method-grid');
+    var grids = document.querySelectorAll('.zones-bar, .insights-duo, .method-grid, .movers-grid');
     grids.forEach(function(el) {
       el.classList.add('animate-stagger');
     });

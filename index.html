@@ -19,8 +19,8 @@
     <meta name="twitter:description" content="217 countries ranked 0-100 by energy-enabled living standards. The electricity gap between top and bottom is 2,457x.">
     <meta name="twitter:image" content="https://paleofaire.github.io/energy-abundance-index/og-image.svg">
 
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Fonts — Playfair Display (editorial serif) + Inter (clean sans) -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400;1,600&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -28,29 +28,29 @@
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>%E2%9A%A1</text></svg>">
 
-    <link rel="stylesheet" href="styles.css?v=20260220c">
+    <link rel="stylesheet" href="styles.css?v=20260224a">
 </head>
 <body>
-    <!-- Skip Link for Accessibility -->
+    <!-- Skip Link -->
     <a href="#map" class="skip-link">Skip to content</a>
 
-    <!-- Reading Progress Bar -->
+    <!-- Reading Progress -->
     <div class="reading-progress" id="reading-progress" role="progressbar" aria-label="Reading progress"></div>
 
-    <!-- Navigation -->
+    <!-- Navigation — clean flat bar -->
     <nav class="nav">
-        <div class="nav-container">
-            <a href="#" class="nav-logo">
-                <span class="logo-mark">ROS</span>
-                <span class="logo-text">Energy Abundance Index</span>
+        <div class="nav-inner">
+            <a href="#" class="nav-brand">
+                <span class="nav-badge">ROS</span>
+                <span class="nav-title">Energy Abundance Index</span>
             </a>
             <div class="nav-links">
-                <a href="#map" class="nav-link">Map</a>
-                <a href="#rankings" class="nav-link">Rankings</a>
-                <a href="#insights" class="nav-link">Insights</a>
-                <a href="#methodology" class="nav-link">Methodology</a>
-                <a href="#compare" class="nav-link">Compare</a>
-                <a href="https://www.rationaloptimistsociety.com" target="_blank" rel="noopener" class="nav-link nav-link-ros">ROS</a>
+                <a href="#map">Map</a>
+                <a href="#rankings">Rankings</a>
+                <a href="#insights">Insights</a>
+                <a href="#methodology">Methodology</a>
+                <a href="#compare">Compare</a>
+                <a href="https://www.rationaloptimistsociety.com" target="_blank" rel="noopener" class="nav-ros">ROS &nearr;</a>
             </div>
             <button class="mobile-menu-btn" aria-label="Menu" id="mobile-menu-btn">
                 <span></span><span></span><span></span>
@@ -68,111 +68,82 @@
         <a href="https://www.rationaloptimistsociety.com" target="_blank" rel="noopener" class="mobile-link">ROS</a>
     </div>
 
-    <!-- Hero Section -->
+    <!-- ═══ HERO — asymmetric split ═══ -->
     <header class="hero">
-        <div class="hero-bg-grid"></div>
-        <div class="hero-content">
+        <div class="hero-left">
             <p class="hero-eyebrow">RATIONAL OPTIMIST SOCIETY</p>
-            <h1 class="hero-title">Energy Abundance Index</h1>
-            <p class="hero-subtitle">A 0&ndash;100 index of energy-enabled living standards across 217 countries. Not dollars. Not promises. <em>Energy per person.</em></p>
+            <h1 class="hero-title">Energy<br>Abundance<br>Index</h1>
+            <p class="hero-subtitle">A 0&ndash;100 ranking of 217 countries by energy-enabled living standards. Not dollars. Not promises. <em>Energy per person.</em></p>
             <div class="hero-stats">
-                <div class="stat">
+                <div class="hero-stat">
                     <span class="stat-number">217</span>
                     <span class="stat-label">Countries</span>
                 </div>
-                <div class="stat-divider"></div>
-                <div class="stat">
+                <div class="hero-stat">
                     <span class="stat-number">2,457x</span>
                     <span class="stat-label">Electricity Gap</span>
                 </div>
-                <div class="stat-divider"></div>
-                <div class="stat">
+                <div class="hero-stat">
                     <span class="stat-number">r&asymp;0.01</span>
                     <span class="stat-label">Clean vs Abundant</span>
                 </div>
             </div>
             <div class="hero-actions">
-                <a href="#map" class="btn primary">Explore the Map</a>
-                <a href="#rankings" class="btn secondary">View Rankings</a>
+                <a href="#map" class="btn-primary">Explore the Map</a>
+                <a href="#rankings" class="btn-outline">View Rankings</a>
             </div>
         </div>
-
-        <!-- Scrolling Headline Ticker -->
-        <div class="headline-ticker">
-            <div class="ticker-track">
-                <span class="ticker-item">Iceland #1 (100.0)</span>
-                <span class="ticker-sep">&bull;</span>
-                <span class="ticker-item">Norway #2 (98.4)</span>
-                <span class="ticker-sep">&bull;</span>
-                <span class="ticker-item">Sweden #3 (94.6)</span>
-                <span class="ticker-sep">&bull;</span>
-                <span class="ticker-item">United States #8 (89.4)</span>
-                <span class="ticker-sep">&bull;</span>
-                <span class="ticker-item">China #52 (75.5)</span>
-                <span class="ticker-sep">&bull;</span>
-                <span class="ticker-item">India #148 (46.5)</span>
-                <span class="ticker-sep">&bull;</span>
-                <span class="ticker-item">Nigeria #194 (16.0)</span>
-                <span class="ticker-sep">&bull;</span>
-                <span class="ticker-item">Niger #217 (0.16)</span>
-                <span class="ticker-sep">&bull;</span>
-                <span class="ticker-item">Electricity gap: 2,457x between top and bottom</span>
-                <span class="ticker-sep">&bull;</span>
-                <span class="ticker-item">Clean energy &amp; abundance barely correlate (r&asymp;0.01)</span>
-                <span class="ticker-sep">&bull;</span>
-                <!-- Duplicate for seamless loop -->
-                <span class="ticker-item">Iceland #1 (100.0)</span>
-                <span class="ticker-sep">&bull;</span>
-                <span class="ticker-item">Norway #2 (98.4)</span>
-                <span class="ticker-sep">&bull;</span>
-                <span class="ticker-item">Sweden #3 (94.6)</span>
-                <span class="ticker-sep">&bull;</span>
-                <span class="ticker-item">United States #8 (89.4)</span>
-                <span class="ticker-sep">&bull;</span>
-                <span class="ticker-item">China #52 (75.5)</span>
-                <span class="ticker-sep">&bull;</span>
-                <span class="ticker-item">India #148 (46.5)</span>
-                <span class="ticker-sep">&bull;</span>
-                <span class="ticker-item">Nigeria #194 (16.0)</span>
-                <span class="ticker-sep">&bull;</span>
-                <span class="ticker-item">Niger #217 (0.16)</span>
-                <span class="ticker-sep">&bull;</span>
-                <span class="ticker-item">Electricity gap: 2,457x between top and bottom</span>
-                <span class="ticker-sep">&bull;</span>
-                <span class="ticker-item">Clean energy &amp; abundance barely correlate (r&asymp;0.01)</span>
-                <span class="ticker-sep">&bull;</span>
-            </div>
-        </div>
-    </header>
-
-    <!-- Quick Glance: Top & Bottom -->
-    <section class="glance-section">
-        <div class="container">
-            <div class="glance-grid">
-                <div class="glance-card glance-top">
-                    <h3 class="glance-title">Most Energy Abundant</h3>
+        <div class="hero-right">
+            <div class="hero-mini-rankings">
+                <div class="mini-col">
+                    <div class="mini-heading green">Most Abundant</div>
                     <div class="glance-list" id="top-10-list"></div>
                 </div>
-                <div class="glance-card glance-bottom">
-                    <h3 class="glance-title">Most Energy Scarce</h3>
+                <div class="mini-col">
+                    <div class="mini-heading red">Most Scarce</div>
                     <div class="glance-list" id="bottom-10-list"></div>
                 </div>
-                <div class="glance-card glance-major">
-                    <h3 class="glance-title">Major Economies</h3>
+                <div class="mini-col">
+                    <div class="mini-heading navy">Major Economies</div>
                     <div class="glance-list" id="major-economies-list"></div>
                 </div>
             </div>
         </div>
-    </section>
+    </header>
 
-    <!-- Interactive World Map -->
-    <section id="map" class="map-section">
+    <!-- Ticker -->
+    <div class="ticker">
+        <div class="ticker-track">
+            <span>Iceland #1 (100.0)</span><span class="sep">&bull;</span>
+            <span>Norway #2 (98.4)</span><span class="sep">&bull;</span>
+            <span>Sweden #3 (94.6)</span><span class="sep">&bull;</span>
+            <span>United States #8 (89.4)</span><span class="sep">&bull;</span>
+            <span>China #52 (75.5)</span><span class="sep">&bull;</span>
+            <span>India #148 (46.5)</span><span class="sep">&bull;</span>
+            <span>Nigeria #194 (16.0)</span><span class="sep">&bull;</span>
+            <span>Niger #217 (0.16)</span><span class="sep">&bull;</span>
+            <span>Electricity gap: 2,457x between top and bottom</span><span class="sep">&bull;</span>
+            <span>Clean energy &amp; abundance barely correlate (r&asymp;0.01)</span><span class="sep">&bull;</span>
+            <!-- duplicate for loop -->
+            <span>Iceland #1 (100.0)</span><span class="sep">&bull;</span>
+            <span>Norway #2 (98.4)</span><span class="sep">&bull;</span>
+            <span>Sweden #3 (94.6)</span><span class="sep">&bull;</span>
+            <span>United States #8 (89.4)</span><span class="sep">&bull;</span>
+            <span>China #52 (75.5)</span><span class="sep">&bull;</span>
+            <span>India #148 (46.5)</span><span class="sep">&bull;</span>
+            <span>Nigeria #194 (16.0)</span><span class="sep">&bull;</span>
+            <span>Niger #217 (0.16)</span><span class="sep">&bull;</span>
+            <span>Electricity gap: 2,457x between top and bottom</span><span class="sep">&bull;</span>
+            <span>Clean energy &amp; abundance barely correlate (r&asymp;0.01)</span><span class="sep">&bull;</span>
+        </div>
+    </div>
+
+    <!-- ═══ MAP — full-bleed dark panel ═══ -->
+    <section id="map" class="dark-panel map-section">
         <div class="container">
-            <div class="section-header">
-                <p class="section-eyebrow">GLOBAL VIEW</p>
-                <h2>Energy Abundance World Map</h2>
-                <p>Hover or click any country to see its energy abundance score and key metrics.</p>
-            </div>
+            <p class="section-eyebrow light">GLOBAL VIEW</p>
+            <h2 class="section-title light">Energy Abundance World Map</h2>
+            <p class="section-desc light">Hover or click any country to see its energy abundance score and key metrics.</p>
         </div>
         <div class="map-wrapper">
             <div id="world-map" role="img" aria-label="Interactive world map showing energy abundance scores by country"></div>
@@ -190,16 +161,13 @@
         </div>
     </section>
 
-    <!-- Rankings Table -->
-    <section id="rankings" class="rankings-section">
+    <!-- ═══ RANKINGS — light panel, striped table ═══ -->
+    <section id="rankings" class="light-panel rankings-section">
         <div class="container">
-            <div class="section-header">
-                <p class="section-eyebrow">FULL RANKINGS</p>
-                <h2>217 Countries Ranked</h2>
-                <p>Search, filter, and sort every country in the index.</p>
-            </div>
+            <p class="section-eyebrow">FULL RANKINGS</p>
+            <h2 class="section-title">217 Countries Ranked</h2>
+            <p class="section-desc">Search, filter, and sort every country in the index.</p>
 
-            <!-- Filter Bar -->
             <div class="filter-bar">
                 <div class="search-wrapper">
                     <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -234,7 +202,6 @@
                 </div>
             </div>
 
-            <!-- Rankings Table -->
             <div class="table-wrapper">
                 <table class="rankings-table" id="rankings-table">
                     <thead>
@@ -242,7 +209,7 @@
                             <th class="th-rank">Rank</th>
                             <th class="th-country">Country</th>
                             <th class="th-score">Score</th>
-                            <th class="th-bar"><!-- bar --></th>
+                            <th class="th-bar"></th>
                             <th class="th-elec">Electricity/Person</th>
                             <th class="th-energy">Primary Energy/Person</th>
                             <th class="th-ratio">Electrification</th>
@@ -256,50 +223,57 @@
         </div>
     </section>
 
-    <!-- Key Insights -->
-    <section id="insights" class="insights-section">
+    <!-- ═══ INSIGHTS — editorial layout ═══ -->
+    <section id="insights" class="light-panel insights-section">
         <div class="container">
-            <div class="section-header">
-                <p class="section-eyebrow">KEY INSIGHTS</p>
-                <h2>What the Data Reveals</h2>
-                <p>Surprising findings from ranking 217 countries by energy abundance.</p>
+            <p class="section-eyebrow">KEY INSIGHTS</p>
+            <h2 class="section-title">What the Data Reveals</h2>
+            <p class="section-desc">Surprising findings from ranking 217 countries by energy abundance.</p>
+
+            <!-- Featured insight — full width -->
+            <div class="insight-featured">
+                <div class="insight-big-number">2,457&times;</div>
+                <div class="insight-featured-body">
+                    <h3>The Electricity Gap</h3>
+                    <p>Iceland uses <strong>51,915 kWh/person/year</strong> (~5.9 kW per person). Chad uses <strong>21 kWh/person/year</strong> (~2.4 watts per person). That&rsquo;s a 2,457-fold gap in electricity access &mdash; far larger than income inequality alone would suggest.</p>
+                </div>
             </div>
 
-            <div class="insights-grid">
-                <div class="insight-card insight-featured">
-                    <div class="insight-number">2,457x</div>
-                    <h3 class="insight-title">The Electricity Gap</h3>
-                    <p class="insight-body">Iceland uses <strong>51,915 kWh/person/year</strong> (~5.9 kW per person). Chad uses <strong>21 kWh/person/year</strong> (~2.4 watts per person). That's a 2,457-fold gap in electricity access &mdash; far larger than income inequality alone would suggest.</p>
-                </div>
-
+            <!-- 2-column insights -->
+            <div class="insights-duo">
                 <div class="insight-card">
                     <div class="insight-icon">r&asymp;0.01</div>
-                    <h3 class="insight-title">Clean &#8800; Abundant</h3>
-                    <p class="insight-body">The correlation between low-carbon electricity share and energy abundance is essentially zero. Bermuda ranks #5 on the index but gets only 1.6% of electricity from low-carbon sources. You can be rich in energy without being clean &mdash; and vice versa.</p>
+                    <h3>Clean &#8800; Abundant</h3>
+                    <p>The correlation between low-carbon electricity share and energy abundance is essentially zero. Bermuda ranks #5 on the index but gets only 1.6% from low-carbon sources. You can be rich in energy without being clean &mdash; and vice versa.</p>
                 </div>
-
                 <div class="insight-card">
                     <div class="insight-icon">#1 &#8594; #17</div>
-                    <h3 class="insight-title">Qatar's Hidden Truth</h3>
-                    <p class="insight-body">Qatar is #1 in raw energy per person but drops to #17 on the index. Why? Its electrification ratio is only 0.089 &mdash; most of that energy never shows up as usable electricity for citizens.</p>
+                    <h3>Qatar&rsquo;s Hidden Truth</h3>
+                    <p>Qatar is #1 in raw energy per person but drops to #17 on the index. Why? Its electrification ratio is only 0.089 &mdash; most of that energy never shows up as usable electricity for citizens.</p>
                 </div>
+            </div>
 
+            <div class="insights-duo">
                 <div class="insight-card">
                     <div class="insight-icon">2.4W</div>
-                    <h3 class="insight-title">Energy Poverty in Watts</h3>
-                    <p class="insight-body">Chad's electricity use averages 2.4 watts per person across its entire economy. That's less than a single LED bulb running continuously. Energy poverty is measured in single-digit watts.</p>
+                    <h3>Energy Poverty in Watts</h3>
+                    <p>Chad&rsquo;s electricity use averages 2.4 watts per person across its entire economy. That&rsquo;s less than a single LED bulb running continuously. Energy poverty is measured in single-digit watts.</p>
                 </div>
-
                 <div class="insight-card">
                     <div class="insight-icon">#136&#8594;#75</div>
-                    <h3 class="insight-title">Paraguay's Electrification</h3>
-                    <p class="insight-body">Paraguay ranks #136 on raw energy per person but jumps to #75 on the index. Its electrification ratio of 0.857 is the world's highest &mdash; nearly all energy shows up as usable electricity thanks to massive hydropower.</p>
+                    <h3>Paraguay&rsquo;s Electrification</h3>
+                    <p>Paraguay ranks #136 on raw energy per person but jumps to #75 on the index. Its electrification ratio of 0.857 is the world&rsquo;s highest &mdash; nearly all energy shows up as usable electricity thanks to massive hydropower.</p>
                 </div>
+            </div>
 
+            <div class="insights-duo">
                 <div class="insight-card">
                     <div class="insight-icon">#24&#8594;#90</div>
-                    <h3 class="insight-title">Luxembourg Mirage</h3>
-                    <p class="insight-body">Luxembourg looks energy-rich in raw data (#24) but drops to #90 on the index. Its electrification ratio is just 0.037 &mdash; cross-border fuel sales massively inflate its primary energy per capita.</p>
+                    <h3>Luxembourg Mirage</h3>
+                    <p>Luxembourg looks energy-rich in raw data (#24) but drops to #90 on the index. Its electrification ratio is just 0.037 &mdash; cross-border fuel sales massively inflate its primary energy per capita.</p>
+                </div>
+                <div class="insight-card highlight-quote">
+                    <blockquote>&ldquo;Imagine you are sent back to 1800 with $1 million in gold. Are you rich? Technically, yes. But you still wash clothes by hand, die of infection, and travel at the speed of a horse. Why? Because you are <em>Energy Poor.</em>&rdquo;</blockquote>
                 </div>
             </div>
 
@@ -321,81 +295,68 @@
         </div>
     </section>
 
-    <!-- Score Zones - The Switch Flip Test -->
-    <section id="zones" class="zones-section">
+    <!-- ═══ ZONES — dark panel, horizontal stepped bar ═══ -->
+    <section id="zones" class="dark-panel zones-section">
         <div class="container">
-            <div class="section-header">
-                <p class="section-eyebrow">THE SWITCH FLIP TEST</p>
-                <h2>What Does Your Score Mean?</h2>
-                <p>The ROS-EAI is a measure of what happens when you flip a light switch.</p>
-            </div>
-            <div class="zones-grid">
-                <div class="zone-card zone-survival">
+            <p class="section-eyebrow light">THE SWITCH FLIP TEST</p>
+            <h2 class="section-title light">What Does Your Score Mean?</h2>
+            <p class="section-desc light">The ROS-EAI is a measure of what happens when you flip a light switch.</p>
+
+            <div class="zones-bar">
+                <div class="zone-segment zone-survival">
                     <div class="zone-range">0&ndash;20</div>
-                    <h3 class="zone-name">The Survival Zone</h3>
-                    <p class="zone-desc">You flip a switch, and nothing happens. Energy is a luxury. You burn wood to cook. Your &ldquo;battery&rdquo; is your own muscles. Light is scarce. The night is dark and unproductive.</p>
+                    <div class="zone-name">Survival</div>
+                    <div class="zone-watt">~2.4W</div>
+                    <p class="zone-desc">You flip a switch, and nothing happens. Your &ldquo;battery&rdquo; is your own muscles.</p>
                     <div class="zone-examples">Chad &bull; Sierra Leone &bull; Niger</div>
-                    <div class="zone-watt"><span>~2.4W</span> per person</div>
                 </div>
-                <div class="zone-card zone-struggle">
+                <div class="zone-segment zone-struggle">
                     <div class="zone-range">20&ndash;50</div>
-                    <h3 class="zone-name">The Struggle Zone</h3>
-                    <p class="zone-desc">You have lights, but they flicker. You have a fridge, but you worry about the bill. Factories run on diesel generators because the grid crashes. You are constrained.</p>
+                    <div class="zone-name">Struggle</div>
+                    <div class="zone-watt">~100W</div>
+                    <p class="zone-desc">You have lights, but they flicker. Factories run on diesel generators.</p>
                     <div class="zone-examples">India &bull; Philippines &bull; Nigeria</div>
-                    <div class="zone-watt"><span>~100W</span> per person</div>
                 </div>
-                <div class="zone-card zone-industrial">
+                <div class="zone-segment zone-industrial">
                     <div class="zone-range">50&ndash;80</div>
-                    <h3 class="zone-name">The Industrial Zone</h3>
-                    <p class="zone-desc">You don&rsquo;t think about the light switch. It just works. You have AC, appliances, and industry. But you might import your energy, or it might be dirty, or expensive.</p>
+                    <div class="zone-name">Industrial</div>
+                    <div class="zone-watt">~750W</div>
+                    <p class="zone-desc">You don&rsquo;t think about the switch. It just works. AC, appliances, industry.</p>
                     <div class="zone-examples">China &bull; Poland &bull; Brazil</div>
-                    <div class="zone-watt"><span>~750W</span> per person</div>
                 </div>
-                <div class="zone-card zone-abundance">
+                <div class="zone-segment zone-abundance">
                     <div class="zone-range">80&ndash;100</div>
-                    <h3 class="zone-name">The Abundance Zone</h3>
-                    <p class="zone-desc">Energy is like air&mdash;invisible and infinite. You heat your driveway to melt snow. You run servers, smelters, and saunas without blinking. You have mastered the physical world.</p>
-                    <div class="zone-examples">Iceland &bull; Norway &bull; United States</div>
-                    <div class="zone-watt"><span>~5,900W</span> per person</div>
+                    <div class="zone-name">Abundance</div>
+                    <div class="zone-watt">~5,900W</div>
+                    <p class="zone-desc">Energy is like air &mdash; invisible and infinite. You have mastered the physical world.</p>
+                    <div class="zone-examples">Iceland &bull; Norway &bull; USA</div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Country Comparison Tool -->
-    <section id="compare" class="compare-section">
+    <!-- ═══ COMPARE — light panel ═══ -->
+    <section id="compare" class="light-panel compare-section">
         <div class="container">
-            <div class="section-header">
-                <p class="section-eyebrow">COMPARE</p>
-                <h2>Country Comparison Tool</h2>
-                <p>Select up to 4 countries to compare side-by-side.</p>
-            </div>
+            <p class="section-eyebrow">COMPARE</p>
+            <h2 class="section-title">Country Comparison Tool</h2>
+            <p class="section-desc">Select up to 4 countries to compare side-by-side.</p>
             <div class="compare-selectors" id="compare-selectors">
-                <select class="compare-select" id="compare-1">
-                    <option value="">Select a country...</option>
-                </select>
-                <select class="compare-select" id="compare-2">
-                    <option value="">Select a country...</option>
-                </select>
-                <select class="compare-select" id="compare-3">
-                    <option value="">Select a country...</option>
-                </select>
-                <select class="compare-select" id="compare-4">
-                    <option value="">Select a country...</option>
-                </select>
+                <select class="compare-select" id="compare-1"><option value="">Select a country...</option></select>
+                <select class="compare-select" id="compare-2"><option value="">Select a country...</option></select>
+                <select class="compare-select" id="compare-3"><option value="">Select a country...</option></select>
+                <select class="compare-select" id="compare-4"><option value="">Select a country...</option></select>
             </div>
             <div class="compare-results" id="compare-results"></div>
         </div>
     </section>
 
-    <!-- Scatter Plot / Chart Section -->
-    <section id="charts" class="charts-section">
+    <!-- ═══ SCATTER — dark panel ═══ -->
+    <section id="charts" class="dark-panel charts-section">
         <div class="container">
-            <div class="section-header">
-                <p class="section-eyebrow">VISUALIZE</p>
-                <h2>Energy Abundance Explorer</h2>
-                <p>Interactive scatter plot &mdash; choose axes to reveal relationships.</p>
-            </div>
+            <p class="section-eyebrow light">VISUALIZE</p>
+            <h2 class="section-title light">Energy Abundance Explorer</h2>
+            <p class="section-desc light">Interactive scatter plot &mdash; choose axes to reveal relationships.</p>
             <div class="chart-controls">
                 <div class="chart-control">
                     <label>X-Axis</label>
@@ -436,55 +397,43 @@
         </div>
     </section>
 
-    <!-- Regional Breakdown -->
-    <section id="regional" class="regional-section">
+    <!-- ═══ REGIONAL — light panel ═══ -->
+    <section id="regional" class="light-panel regional-section">
         <div class="container">
-            <div class="section-header">
-                <p class="section-eyebrow">REGIONAL VIEW</p>
-                <h2>Regional Breakdown</h2>
-                <p>Average scores and metrics by region.</p>
-            </div>
+            <p class="section-eyebrow">REGIONAL VIEW</p>
+            <h2 class="section-title">Regional Breakdown</h2>
+            <p class="section-desc">Average scores and metrics by region.</p>
             <div class="regional-grid" id="regional-grid"></div>
         </div>
     </section>
 
-    <!-- Methodology -->
-    <section id="methodology" class="methodology-section">
+    <!-- ═══ METHODOLOGY — light panel ═══ -->
+    <section id="methodology" class="light-panel methodology-section">
         <div class="container">
-            <div class="section-header">
-                <p class="section-eyebrow">METHODOLOGY</p>
-                <h2>How the Index Works</h2>
-                <p>Transparent, reproducible, and designed to be hard to game.</p>
-            </div>
+            <p class="section-eyebrow">METHODOLOGY</p>
+            <h2 class="section-title">How the Index Works</h2>
+            <p class="section-desc">Transparent, reproducible, and designed to be hard to game.</p>
 
             <div class="method-grid">
                 <div class="method-card">
-                    <div class="method-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-                    </div>
+                    <div class="method-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
                     <h3>Electricity per Person</h3>
                     <p>High-quality energy services. Log-scaled, winsorized min-max normalization (5th-95th percentile). <strong>50% of System Score.</strong></p>
                 </div>
                 <div class="method-card">
-                    <div class="method-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                    </div>
+                    <div class="method-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
                     <h3>Primary Energy per Person</h3>
                     <p>Total energy throughput per capita. Log-scaled, same normalization. <strong>30% of System Score.</strong></p>
                 </div>
                 <div class="method-card">
-                    <div class="method-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                    </div>
+                    <div class="method-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
                     <h3>Electrification Ratio</h3>
                     <p>Electricity / primary energy. Proxy for modern, usable energy delivery. Winsorized min-max. <strong>20% of System Score.</strong></p>
                 </div>
                 <div class="method-card">
-                    <div class="method-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 2v10l7-7"/></svg>
-                    </div>
+                    <div class="method-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 2v10l7-7"/></svg></div>
                     <h3>GDP Adjustment (Lived Score)</h3>
-                    <p>The published "Lived" score blends 80% System Score with 20% GDP per capita (log-scaled) to reduce cases where energy use is dominated by exports or heavy industry.</p>
+                    <p>The published &ldquo;Lived&rdquo; score blends 80% System Score with 20% GDP per capita (log-scaled) to reduce cases where energy use is dominated by exports or heavy industry.</p>
                 </div>
             </div>
 
@@ -503,13 +452,13 @@
         </div>
     </section>
 
-    <!-- What is Energy Abundance -->
-    <section class="about-section">
+    <!-- ═══ ABOUT — dark panel with editorial quote ═══ -->
+    <section class="dark-panel about-section">
         <div class="container">
             <div class="about-grid">
                 <div class="about-text">
-                    <p class="section-eyebrow">WHY ENERGY?</p>
-                    <h2>Energy Is the Master Resource</h2>
+                    <p class="section-eyebrow light">WHY ENERGY?</p>
+                    <h2 class="section-title light">Energy Is the Master Resource</h2>
                     <p>Money is noisy. GDP per capita fluctuates with currency markets, financial flows, and statistical revisions. But energy &mdash; how many kilowatt-hours of electricity and primary energy each person has access to &mdash; is a more direct measure of material living standards.</p>
                     <p>The ROS Energy Abundance Index was built to answer a simple question: <strong>How energy-rich is life for the average person in each country?</strong></p>
                     <p>Traditional energy rankings are misleading. A country can look energy-rich simply because it exports oil or refines fuel for ships. The ROS-EAI corrects for these distortions by emphasizing <em>electricity per person</em> and the <em>electrification ratio</em> &mdash; measures that track usable energy services rather than raw throughput.</p>
@@ -518,15 +467,12 @@
                     <div class="callout-card">
                         <span class="callout-number">51,915</span>
                         <span class="callout-unit">kWh/person/year</span>
-                        <span class="callout-label">Iceland's electricity use</span>
+                        <span class="callout-label">Iceland&rsquo;s electricity use</span>
                     </div>
-                    <div class="callout-card callout-card-dim">
+                    <div class="callout-card dim">
                         <span class="callout-number">21</span>
                         <span class="callout-unit">kWh/person/year</span>
-                        <span class="callout-label">Chad's electricity use</span>
-                    </div>
-                    <div class="callout-card callout-quote">
-                        <p>&ldquo;Imagine you are sent back to 1800 with $1 million in gold. Are you rich? Technically, yes. But you still wash clothes by hand, die of infection, and travel at the speed of a horse. Why? Because you are <em>Energy Poor.</em>&rdquo;</p>
+                        <span class="callout-label">Chad&rsquo;s electricity use</span>
                     </div>
                 </div>
             </div>
@@ -549,13 +495,13 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
-            <div class="footer-content">
+            <div class="footer-inner">
                 <div class="footer-brand">
-                    <span class="logo-mark">ROS</span>
+                    <span class="nav-badge">ROS</span>
                     <span>Energy Abundance Index</span>
                 </div>
-                <p class="footer-text">Built by the <a href="https://www.rationaloptimistsociety.com" target="_blank" rel="noopener">Rational Optimist Society</a></p>
-                <p class="footer-disclaimer">Data: OWID Energy Data (2022-2023), World Bank GDP (2024). Index methodology: ROS. Last updated February 2026.</p>
+                <p>Built by the <a href="https://www.rationaloptimistsociety.com" target="_blank" rel="noopener">Rational Optimist Society</a></p>
+                <p class="footer-fine">Data: OWID Energy Data (2022-2023), World Bank GDP (2024). Index methodology: ROS. Last updated February 2026.</p>
             </div>
         </div>
     </footer>
@@ -563,7 +509,7 @@
     <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
-    <script src="data.js?v=20260220c"></script>
-    <script src="app.js?v=20260220c"></script>
+    <script src="data.js?v=20260224a"></script>
+    <script src="app.js?v=20260224a"></script>
 </body>
 </html>
