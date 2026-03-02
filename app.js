@@ -1053,41 +1053,67 @@
       items: [
         { id: 'led_bulb', name: 'LED Bulb (10W)', wattage: 10, inputType: 'hours', defaultValue: 5, unit: 'hrs' },
         { id: 'incandescent', name: 'Incandescent Bulb (60W)', wattage: 60, inputType: 'hours', defaultValue: 3, unit: 'hrs' },
-        { id: 'fluorescent', name: 'Fluorescent Tube (36W)', wattage: 36, inputType: 'hours', defaultValue: 4, unit: 'hrs' }
+        { id: 'fluorescent', name: 'Fluorescent Tube (36W)', wattage: 36, inputType: 'hours', defaultValue: 4, unit: 'hrs' },
+        { id: 'desk_lamp', name: 'LED Desk Lamp', wattage: 10, inputType: 'hours', defaultValue: 4, unit: 'hrs' }
       ]
     },
     digital: {
-      name: 'Digital & Entertainment', icon: '\uD83D\uDCBB',
+      name: 'Home Office', icon: '\uD83D\uDCBB',
       items: [
         { id: 'laptop', name: 'Laptop', wattage: 50, inputType: 'hours', defaultValue: 6, unit: 'hrs' },
         { id: 'desktop', name: 'Desktop Computer', wattage: 200, inputType: 'hours', defaultValue: 4, unit: 'hrs' },
-        { id: 'tv_led', name: 'LED TV (55")', wattage: 80, inputType: 'hours', defaultValue: 3, unit: 'hrs' },
-        { id: 'gaming', name: 'Gaming Console', wattage: 120, inputType: 'hours', defaultValue: 2, unit: 'hrs' },
+        { id: 'monitor', name: 'Monitor (27")', wattage: 30, inputType: 'hours', defaultValue: 8, unit: 'hrs' },
         { id: 'wifi', name: 'WiFi Router', wattage: null, inputType: 'fixed', defaultValue: 1, fixedWh: 240, unit: 'always on' },
         { id: 'phone_charge', name: 'Smartphone Charge', wattage: null, inputType: 'fixed', defaultValue: 1, fixedWh: 20, unit: 'per day' },
-        { id: 'streaming', name: 'Streaming Video', wattage: 65, inputType: 'hours', defaultValue: 2, unit: 'hrs', note: 'TV + network combined' }
+        { id: 'tablet_charge', name: 'Tablet Charge', wattage: null, inputType: 'fixed', defaultValue: 1, fixedWh: 15, unit: 'per day' },
+        { id: 'printer', name: 'Inkjet Printer', wattage: 30, inputType: 'minutes', defaultValue: 10, unit: 'min' }
+      ]
+    },
+    entertainment: {
+      name: 'Entertainment', icon: '\uD83C\uDFAE',
+      items: [
+        { id: 'tv_led', name: 'LED TV (55")', wattage: 80, inputType: 'hours', defaultValue: 3, unit: 'hrs' },
+        { id: 'gaming', name: 'Gaming Console', wattage: 180, inputType: 'hours', defaultValue: 2, unit: 'hrs' },
+        { id: 'streaming_device', name: 'Streaming Device', wattage: 6, inputType: 'hours', defaultValue: 3, unit: 'hrs' },
+        { id: 'soundbar', name: 'Soundbar', wattage: 30, inputType: 'hours', defaultValue: 3, unit: 'hrs' },
+        { id: 'smart_speaker', name: 'Smart Speaker', wattage: null, inputType: 'fixed', defaultValue: 1, fixedWh: 72, unit: 'always on' }
       ]
     },
     kitchen: {
       name: 'Kitchen', icon: '\uD83C\uDF73',
       items: [
         { id: 'fridge', name: 'Refrigerator', wattage: null, inputType: 'fixed', defaultValue: 1, fixedWh: 1000, unit: 'always on' },
+        { id: 'freezer', name: 'Chest Freezer', wattage: null, inputType: 'fixed', defaultValue: 1, fixedWh: 400, unit: 'always on' },
         { id: 'kettle', name: 'Electric Kettle', wattage: null, inputType: 'boils', defaultValue: 3, whPerUnit: 100, unit: 'boils' },
         { id: 'microwave', name: 'Microwave', wattage: 1000, inputType: 'minutes', defaultValue: 10, unit: 'min' },
         { id: 'oven', name: 'Electric Oven', wattage: 2500, inputType: 'minutes', defaultValue: 30, unit: 'min' },
+        { id: 'toaster', name: 'Toaster', wattage: 1000, inputType: 'minutes', defaultValue: 4, unit: 'min' },
         { id: 'dishwasher', name: 'Dishwasher', wattage: null, inputType: 'cycles', defaultValue: 1, whPerUnit: 1500, unit: 'cycles' },
         { id: 'induction', name: 'Induction Cooktop', wattage: 2000, inputType: 'minutes', defaultValue: 20, unit: 'min' },
-        { id: 'coffee', name: 'Coffee Maker', wattage: null, inputType: 'cycles', defaultValue: 2, whPerUnit: 100, unit: 'cups' },
-        { id: 'air_fryer', name: 'Air Fryer', wattage: 1000, inputType: 'minutes', defaultValue: 15, unit: 'min' }
+        { id: 'coffee', name: 'Coffee Maker', wattage: null, inputType: 'cycles', defaultValue: 2, whPerUnit: 25, unit: 'cups' },
+        { id: 'air_fryer', name: 'Air Fryer', wattage: 1500, inputType: 'minutes', defaultValue: 15, unit: 'min' },
+        { id: 'blender', name: 'Blender', wattage: 500, inputType: 'minutes', defaultValue: 3, unit: 'min' },
+        { id: 'slow_cooker', name: 'Slow Cooker', wattage: 200, inputType: 'hours', defaultValue: 6, unit: 'hrs' },
+        { id: 'rice_cooker', name: 'Rice Cooker', wattage: null, inputType: 'cycles', defaultValue: 1, whPerUnit: 200, unit: 'cycles' }
       ]
     },
     laundry: {
       name: 'Laundry & Cleaning', icon: '\uD83E\uDDFA',
       items: [
-        { id: 'washer', name: 'Washing Machine', wattage: null, inputType: 'cycles', defaultValue: 1, whPerUnit: 800, unit: 'loads' },
+        { id: 'washer', name: 'Washing Machine', wattage: null, inputType: 'cycles', defaultValue: 1, whPerUnit: 500, unit: 'loads' },
         { id: 'dryer', name: 'Tumble Dryer', wattage: null, inputType: 'cycles', defaultValue: 1, whPerUnit: 2500, unit: 'loads' },
         { id: 'iron', name: 'Clothes Iron', wattage: 1200, inputType: 'minutes', defaultValue: 15, unit: 'min' },
-        { id: 'vacuum', name: 'Vacuum Cleaner', wattage: 750, inputType: 'minutes', defaultValue: 20, unit: 'min' }
+        { id: 'vacuum', name: 'Vacuum Cleaner', wattage: 750, inputType: 'minutes', defaultValue: 20, unit: 'min' },
+        { id: 'robot_vacuum', name: 'Robot Vacuum', wattage: null, inputType: 'fixed', defaultValue: 1, fixedWh: 30, unit: 'per day' }
+      ]
+    },
+    personal: {
+      name: 'Personal Care', icon: '\uD83D\uDEC1',
+      items: [
+        { id: 'hairdryer', name: 'Hairdryer', wattage: 1750, inputType: 'minutes', defaultValue: 5, unit: 'min' },
+        { id: 'hair_straightener', name: 'Hair Straightener', wattage: 60, inputType: 'minutes', defaultValue: 10, unit: 'min' },
+        { id: 'electric_shaver', name: 'Electric Shaver', wattage: 15, inputType: 'minutes', defaultValue: 5, unit: 'min' },
+        { id: 'electric_toothbrush', name: 'Electric Toothbrush', wattage: null, inputType: 'fixed', defaultValue: 1, fixedWh: 2, unit: 'per day' }
       ]
     },
     climate: {
@@ -1097,17 +1123,37 @@
         { id: 'heater', name: 'Space Heater', wattage: 1500, inputType: 'hours', defaultValue: 3, unit: 'hrs' },
         { id: 'heat_pump', name: 'Heat Pump', wattage: 1000, inputType: 'hours', defaultValue: 6, unit: 'hrs' },
         { id: 'fan', name: 'Ceiling Fan', wattage: 75, inputType: 'hours', defaultValue: 8, unit: 'hrs' },
-        { id: 'water_heater', name: 'Electric Water Heater', wattage: 4000, inputType: 'hours', defaultValue: 1, unit: 'hrs' },
+        { id: 'water_heater', name: 'Electric Water Heater', wattage: 4000, inputType: 'hours', defaultValue: 3, unit: 'hrs' },
         { id: 'shower', name: 'Electric Shower', wattage: 9500, inputType: 'minutes', defaultValue: 8, unit: 'min' },
-        { id: 'hairdryer', name: 'Hairdryer', wattage: 1750, inputType: 'minutes', defaultValue: 5, unit: 'min' }
+        { id: 'dehumidifier', name: 'Dehumidifier', wattage: 500, inputType: 'hours', defaultValue: 8, unit: 'hrs' },
+        { id: 'humidifier', name: 'Humidifier', wattage: 40, inputType: 'hours', defaultValue: 8, unit: 'hrs' },
+        { id: 'air_purifier', name: 'Air Purifier', wattage: null, inputType: 'fixed', defaultValue: 1, fixedWh: 600, unit: 'always on' },
+        { id: 'electric_blanket', name: 'Electric Blanket', wattage: 100, inputType: 'hours', defaultValue: 2, unit: 'hrs' }
+      ]
+    },
+    smarthome: {
+      name: 'Smart Home & Security', icon: '\uD83C\uDFE0',
+      items: [
+        { id: 'security_camera', name: 'Security Camera', wattage: null, inputType: 'fixed', defaultValue: 1, fixedWh: 120, unit: 'always on' },
+        { id: 'doorbell_cam', name: 'Video Doorbell', wattage: null, inputType: 'fixed', defaultValue: 1, fixedWh: 36, unit: 'always on' },
+        { id: 'smart_display', name: 'Smart Display', wattage: null, inputType: 'fixed', defaultValue: 1, fixedWh: 96, unit: 'always on' },
+        { id: 'set_top_box', name: 'Set-Top Box / DVR', wattage: null, inputType: 'fixed', defaultValue: 1, fixedWh: 360, unit: 'always on' }
       ]
     },
     transport: {
       name: 'Electric Transport', icon: '\uD83D\uDE97',
       items: [
-        { id: 'ev', name: 'Electric Car (per 10 mi)', wattage: null, inputType: 'cycles', defaultValue: 3, whPerUnit: 3000, unit: '\u00D710mi' },
+        { id: 'ev', name: 'Electric Car (per 10 mi)', wattage: null, inputType: 'cycles', defaultValue: 3, whPerUnit: 3500, unit: '\u00D710mi' },
         { id: 'ebike', name: 'E-Bike Charge', wattage: null, inputType: 'cycles', defaultValue: 1, whPerUnit: 500, unit: 'charges' },
         { id: 'escooter', name: 'E-Scooter Charge', wattage: null, inputType: 'cycles', defaultValue: 1, whPerUnit: 250, unit: 'charges' }
+      ]
+    },
+    fitness: {
+      name: 'Fitness & Wellness', icon: '\uD83C\uDFCB\uFE0F',
+      items: [
+        { id: 'treadmill', name: 'Treadmill', wattage: 700, inputType: 'minutes', defaultValue: 30, unit: 'min' },
+        { id: 'exercise_bike', name: 'Exercise Bike', wattage: 50, inputType: 'minutes', defaultValue: 30, unit: 'min' },
+        { id: 'hot_tub', name: 'Hot Tub / Spa', wattage: 1500, inputType: 'hours', defaultValue: 2, unit: 'hrs' }
       ]
     },
     outdoor: {
@@ -1115,7 +1161,9 @@
       items: [
         { id: 'pool_pump', name: 'Pool Pump', wattage: 1500, inputType: 'hours', defaultValue: 6, unit: 'hrs' },
         { id: 'mower', name: 'Electric Lawn Mower', wattage: 1400, inputType: 'minutes', defaultValue: 30, unit: 'min' },
-        { id: 'outdoor_lights', name: 'Outdoor Lights', wattage: 100, inputType: 'hours', defaultValue: 6, unit: 'hrs' }
+        { id: 'outdoor_lights', name: 'Outdoor Lights', wattage: 100, inputType: 'hours', defaultValue: 6, unit: 'hrs' },
+        { id: 'pressure_washer', name: 'Pressure Washer', wattage: 1800, inputType: 'minutes', defaultValue: 15, unit: 'min' },
+        { id: 'garage_door', name: 'Garage Door Opener', wattage: null, inputType: 'cycles', defaultValue: 4, whPerUnit: 5, unit: 'uses' }
       ]
     }
   };
@@ -1136,7 +1184,7 @@
     selections: {},
     view: 'energy',
     priceCountry: 'USA',
-    maxSelections: 12
+    maxSelections: 20
   };
 
   var CALC_COMPARE_COUNTRIES = [
