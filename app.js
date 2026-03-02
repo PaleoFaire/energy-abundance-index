@@ -953,7 +953,7 @@
   // ── Scroll-Triggered Animations ──
   function initScrollAnimations() {
     // Add animation classes to sections
-    var sections = document.querySelectorAll('.insight-card, .insight-featured, .method-card, .zone-segment, .regional-card, .about-text, .about-callouts, .method-formula, .movers-card, .highlight-quote, .calc-layout');
+    var sections = document.querySelectorAll('.insight-card, .insight-featured, .method-card, .zone-segment, .regional-card, .about-text, .about-callouts, .method-formula, .movers-card, .highlight-quote, .calc-layout, .lcoe-chart-wrap, .lcoe-history-wrap, .conv-input-hero, .persp-compare, .persp-card');
     sections.forEach(function(el) {
       el.classList.add('animate-on-scroll');
     });
@@ -1679,6 +1679,570 @@
     }, 'image/png');
   }
 
+  // ── LCOE Comparison Tool ──
+  var LCOE_DATA = [
+    { tech: 'Solar PV (Utility)',    low: 24,  mid: 37,  high: 96,  color: '#FBBF24', category: 'renewable', co2: 0 },
+    { tech: 'Solar PV (Rooftop)',    low: 67,  mid: 102, high: 180, color: '#F59E0B', category: 'renewable', co2: 0 },
+    { tech: 'Onshore Wind',          low: 24,  mid: 38,  high: 75,  color: '#34D399', category: 'renewable', co2: 0 },
+    { tech: 'Offshore Wind',         low: 72,  mid: 106, high: 140, color: '#6EE7B7', category: 'renewable', co2: 0 },
+    { tech: 'Nuclear',               low: 88,  mid: 142, high: 221, color: '#A78BFA', category: 'firm',      co2: 0 },
+    { tech: 'Natural Gas (CCGT)',    low: 39,  mid: 60,  high: 77,  color: '#60A5FA', category: 'fossil',    co2: 0.41 },
+    { tech: 'Natural Gas (Peaking)', low: 115, mid: 177, high: 221, color: '#93C5FD', category: 'fossil',    co2: 0.55 },
+    { tech: 'Coal',                  low: 68,  mid: 117, high: 166, color: '#9CA3AF', category: 'fossil',    co2: 0.95 },
+    { tech: 'Battery Storage (4h)',  low: 92,  mid: 151, high: 227, color: '#FB923C', category: 'storage',   co2: 0 },
+    { tech: 'Geothermal',            low: 57,  mid: 78,  high: 100, color: '#F87171', category: 'renewable', co2: 0 },
+    { tech: 'Hydroelectric',         low: 26,  mid: 61,  high: 102, color: '#38BDF8', category: 'renewable', co2: 0 }
+  ];
+
+  var LCOE_HISTORY = {
+    'Solar PV':  { color: '#FBBF24', data: [359,226,135,99,65,50,44,40,37,36,33,30,29,27,24] },
+    'Onshore Wind': { color: '#34D399', data: [95,82,73,70,60,55,47,45,41,44,38,35,33,37,38] },
+    'Battery':   { color: '#FB923C', data: [1100,900,700,550,400,350,280,210,170,150,140,132,151,151,92] },
+    'Gas (CCGT)':{ color: '#60A5FA', data: [83,69,65,67,61,65,56,58,56,44,45,60,60,60,60] },
+    'Nuclear':   { color: '#A78BFA', data: [123,114,112,115,118,117,148,151,155,155,163,167,142,142,142] },
+    'Coal':      { color: '#9CA3AF', data: [111,105,97,100,95,95,102,99,96,109,108,112,117,117,117] }
+  };
+  var LCOE_YEARS = [];
+  for (var y = 2010; y <= 2024; y++) LCOE_YEARS.push(y);
+
+  var lcoeSort = 'mid';
+  var lcoeCarbon = 0;
+
+  function drawLcoeChart() {
+    var canvas = document.getElementById('lcoe-chart');
+    if (!canvas) return;
+    var dpr = window.devicePixelRatio || 1;
+    var wrap = canvas.parentElement;
+    var W = wrap.clientWidth - 48;
+    var barH = 34;
+    var gap = 8;
+    var labelW = 170;
+    var rightPad = 60;
+    var topPad = 10;
+    var items = LCOE_DATA.slice();
+
+    // Apply carbon price
+    if (lcoeCarbon > 0) {
+      items = items.map(function(d) {
+        var add = d.co2 * lcoeCarbon;
+        return { tech: d.tech, low: d.low + add, mid: d.mid + add, high: d.high + add, color: d.color, category: d.category, co2: d.co2, carbonAdd: add };
+      });
+    }
+
+    // Sort
+    if (lcoeSort === 'mid') items.sort(function(a,b){ return a.mid - b.mid; });
+    else if (lcoeSort === 'low') items.sort(function(a,b){ return a.low - b.low; });
+    else {
+      var catOrder = { renewable: 0, firm: 1, storage: 2, fossil: 3 };
+      items.sort(function(a,b){ return (catOrder[a.category]||0) - (catOrder[b.category]||0) || a.mid - b.mid; });
+    }
+
+    var H = topPad + items.length * (barH + gap) + 30;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    var ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+
+    var maxVal = 0;
+    items.forEach(function(d){ if (d.high > maxVal) maxVal = d.high; });
+    maxVal = Math.ceil(maxVal / 50) * 50;
+    var chartW = W - labelW - rightPad;
+
+    // Grid lines
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = 1;
+    for (var g = 0; g <= maxVal; g += 50) {
+      var gx = labelW + (g / maxVal) * chartW;
+      ctx.beginPath(); ctx.moveTo(gx, topPad); ctx.lineTo(gx, H - 20); ctx.stroke();
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      ctx.font = '11px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('$' + g, gx, H - 6);
+    }
+
+    // Bars
+    items.forEach(function(d, i) {
+      var yy = topPad + i * (barH + gap);
+      var x1 = labelW + (d.low / maxVal) * chartW;
+      var x2 = labelW + (d.high / maxVal) * chartW;
+      var xm = labelW + (d.mid / maxVal) * chartW;
+
+      // Label
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.font = '13px Inter, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(d.tech, labelW - 12, yy + barH / 2);
+
+      // Range bar (low to high)
+      ctx.fillStyle = d.color + '33';
+      var rh = barH * 0.6;
+      var ry = yy + (barH - rh) / 2;
+      var bw = x2 - x1;
+      var r = Math.min(4, bw / 2);
+      ctx.beginPath();
+      ctx.moveTo(x1 + r, ry);
+      ctx.lineTo(x1 + bw - r, ry);
+      ctx.quadraticCurveTo(x1 + bw, ry, x1 + bw, ry + r);
+      ctx.lineTo(x1 + bw, ry + rh - r);
+      ctx.quadraticCurveTo(x1 + bw, ry + rh, x1 + bw - r, ry + rh);
+      ctx.lineTo(x1 + r, ry + rh);
+      ctx.quadraticCurveTo(x1, ry + rh, x1, ry + rh - r);
+      ctx.lineTo(x1, ry + r);
+      ctx.quadraticCurveTo(x1, ry, x1 + r, ry);
+      ctx.fill();
+
+      // Mid marker
+      ctx.fillStyle = d.color;
+      ctx.fillRect(xm - 2, yy + 4, 4, barH - 8);
+
+      // Low and high ticks
+      ctx.fillStyle = d.color + 'aa';
+      ctx.fillRect(x1 - 1, yy + 6, 2, barH - 12);
+      ctx.fillRect(x2 - 1, yy + 6, 2, barH - 12);
+
+      // Value label (midpoint)
+      ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      ctx.font = '12px Inter, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('$' + Math.round(d.mid), x2 + 8, yy + barH / 2);
+    });
+
+    // Store items for hover
+    canvas._lcoeItems = items;
+    canvas._lcoeBarH = barH;
+    canvas._lcoeGap = gap;
+    canvas._lcoeTopPad = topPad;
+    canvas._lcoeLabelW = labelW;
+    canvas._lcoeChartW = chartW;
+    canvas._lcoeMaxVal = maxVal;
+  }
+
+  function bindLcoeChartHover() {
+    var canvas = document.getElementById('lcoe-chart');
+    var tooltip = document.getElementById('lcoe-tooltip');
+    if (!canvas || !tooltip) return;
+    canvas.addEventListener('mousemove', function(e) {
+      var rect = canvas.getBoundingClientRect();
+      var x = e.clientX - rect.left;
+      var y = e.clientY - rect.top;
+      var items = canvas._lcoeItems;
+      if (!items) return;
+      var found = null;
+      for (var i = 0; i < items.length; i++) {
+        var yy = canvas._lcoeTopPad + i * (canvas._lcoeBarH + canvas._lcoeGap);
+        if (y >= yy && y <= yy + canvas._lcoeBarH) { found = items[i]; break; }
+      }
+      if (found) {
+        var html = '<strong>' + found.tech + '</strong><br>Low: $' + Math.round(found.low) + '/MWh &nbsp; Mid: $' + Math.round(found.mid) + '/MWh &nbsp; High: $' + Math.round(found.high) + '/MWh';
+        if (found.carbonAdd) html += '<br><em>Includes $' + Math.round(found.carbonAdd) + ' carbon cost</em>';
+        tooltip.innerHTML = html;
+        tooltip.style.opacity = '1';
+        tooltip.style.left = Math.min(x + 12, rect.width - 280) + 'px';
+        tooltip.style.top = (y - 50) + 'px';
+      } else {
+        tooltip.style.opacity = '0';
+      }
+    });
+    canvas.addEventListener('mouseleave', function() { tooltip.style.opacity = '0'; });
+  }
+
+  function drawLcoeHistory() {
+    var canvas = document.getElementById('lcoe-history-chart');
+    if (!canvas) return;
+    var dpr = window.devicePixelRatio || 1;
+    var wrap = canvas.parentElement;
+    var W = wrap.clientWidth - 48;
+    var H = 300;
+    var padL = 55, padR = 20, padT = 20, padB = 40;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    var ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+
+    var chartW = W - padL - padR;
+    var chartH = H - padT - padB;
+
+    // Find max
+    var maxV = 0;
+    Object.keys(LCOE_HISTORY).forEach(function(k) {
+      LCOE_HISTORY[k].data.forEach(function(v) { if (v > maxV) maxV = v; });
+    });
+    maxV = Math.ceil(maxV / 100) * 100 + 100;
+
+    // Grid
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = 1;
+    for (var g = 0; g <= maxV; g += 200) {
+      var gy = padT + chartH - (g / maxV) * chartH;
+      ctx.beginPath(); ctx.moveTo(padL, gy); ctx.lineTo(W - padR, gy); ctx.stroke();
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      ctx.font = '11px Inter, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText('$' + g, padL - 8, gy + 3);
+    }
+
+    // Year labels
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.font = '11px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    LCOE_YEARS.forEach(function(yr, i) {
+      if (i % 2 === 0 || i === LCOE_YEARS.length - 1) {
+        var xx = padL + (i / (LCOE_YEARS.length - 1)) * chartW;
+        ctx.fillText(yr, xx, H - padB + 20);
+      }
+    });
+
+    // Draw lines
+    Object.keys(LCOE_HISTORY).forEach(function(key) {
+      var d = LCOE_HISTORY[key];
+      ctx.strokeStyle = d.color;
+      ctx.lineWidth = 2.5;
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      d.data.forEach(function(val, i) {
+        var xx = padL + (i / (LCOE_YEARS.length - 1)) * chartW;
+        var yy = padT + chartH - (val / maxV) * chartH;
+        if (i === 0) ctx.moveTo(xx, yy); else ctx.lineTo(xx, yy);
+      });
+      ctx.stroke();
+
+      // End dot + label
+      var lastVal = d.data[d.data.length - 1];
+      var ex = padL + chartW;
+      var ey = padT + chartH - (lastVal / maxV) * chartH;
+      ctx.fillStyle = d.color;
+      ctx.beginPath();
+      ctx.arc(ex, ey, 4, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // Store for hover
+    canvas._historyMaxV = maxV;
+    canvas._historyChartW = chartW;
+    canvas._historyChartH = chartH;
+    canvas._historyPadL = padL;
+    canvas._historyPadT = padT;
+  }
+
+  function bindLcoeHistoryHover() {
+    var canvas = document.getElementById('lcoe-history-chart');
+    var tooltip = document.getElementById('lcoe-history-tooltip');
+    if (!canvas || !tooltip) return;
+    canvas.addEventListener('mousemove', function(e) {
+      var rect = canvas.getBoundingClientRect();
+      var x = e.clientX - rect.left;
+      var padL = canvas._historyPadL || 55;
+      var chartW = canvas._historyChartW;
+      if (!chartW) return;
+      var relX = x - padL;
+      if (relX < 0 || relX > chartW) { tooltip.style.opacity = '0'; return; }
+      var idx = Math.round((relX / chartW) * (LCOE_YEARS.length - 1));
+      idx = Math.max(0, Math.min(LCOE_YEARS.length - 1, idx));
+      var yr = LCOE_YEARS[idx];
+      var lines = '<strong>' + yr + '</strong>';
+      Object.keys(LCOE_HISTORY).forEach(function(k) {
+        var val = LCOE_HISTORY[k].data[idx];
+        lines += '<br><span style="color:' + LCOE_HISTORY[k].color + '">■</span> ' + k + ': $' + val + '/MWh';
+      });
+      tooltip.innerHTML = lines;
+      tooltip.style.opacity = '1';
+      tooltip.style.left = Math.min(x + 12, rect.width - 220) + 'px';
+      tooltip.style.top = '20px';
+    });
+    canvas.addEventListener('mouseleave', function() { tooltip.style.opacity = '0'; });
+  }
+
+  function buildLcoeLegend() {
+    var el = document.getElementById('lcoe-legend');
+    if (!el) return;
+    var html = '';
+    Object.keys(LCOE_HISTORY).forEach(function(k) {
+      html += '<div class="lcoe-legend-item"><span class="lcoe-legend-swatch" style="background:' + LCOE_HISTORY[k].color + '"></span>' + k + '</div>';
+    });
+    el.innerHTML = html;
+  }
+
+  function initLcoe() {
+    buildLcoeLegend();
+    bindLcoeChartHover();
+    bindLcoeHistoryHover();
+
+    // Sort toggle
+    var sortBtns = document.querySelectorAll('#lcoe-sort-toggle .lcoe-toggle-btn');
+    sortBtns.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        sortBtns.forEach(function(b){ b.classList.remove('active'); });
+        btn.classList.add('active');
+        lcoeSort = btn.getAttribute('data-sort');
+        drawLcoeChart();
+      });
+    });
+
+    // Carbon toggle
+    var carbonBtns = document.querySelectorAll('#lcoe-carbon-toggle .lcoe-toggle-btn');
+    carbonBtns.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        carbonBtns.forEach(function(b){ b.classList.remove('active'); });
+        btn.classList.add('active');
+        lcoeCarbon = parseInt(btn.getAttribute('data-carbon'));
+        drawLcoeChart();
+      });
+    });
+  }
+
+  // ── Energy Unit Converter ──
+  var CONV_UNITS = [
+    { id: 'Wh',     name: 'Watt-hours',    group: 'Electrical', factor: 1000 },
+    { id: 'kWh',    name: 'Kilowatt-hours', group: 'Electrical', factor: 1 },
+    { id: 'MWh',    name: 'Megawatt-hours', group: 'Electrical', factor: 0.001 },
+    { id: 'GWh',    name: 'Gigawatt-hours', group: 'Electrical', factor: 0.000001 },
+    { id: 'TWh',    name: 'Terawatt-hours', group: 'Electrical', factor: 0.000000001 },
+    { id: 'BTU',    name: 'British Thermal Units', group: 'Thermal', factor: 3412.14 },
+    { id: 'MMBTU',  name: 'Million BTU',    group: 'Thermal', factor: 0.00341214 },
+    { id: 'Therms', name: 'Therms',         group: 'Thermal', factor: 0.034121 },
+    { id: 'J',      name: 'Joules',         group: 'SI',       factor: 3600000 },
+    { id: 'kJ',     name: 'Kilojoules',     group: 'SI',       factor: 3600 },
+    { id: 'MJ',     name: 'Megajoules',     group: 'SI',       factor: 3.6 },
+    { id: 'GJ',     name: 'Gigajoules',     group: 'SI',       factor: 0.0036 },
+    { id: 'TJ',     name: 'Terajoules',     group: 'SI',       factor: 0.0000036 },
+    { id: 'toe',    name: 'Tonnes of Oil Eq.', group: 'Fuel', factor: 0.0000861 },
+    { id: 'boe',    name: 'Barrels of Oil Eq.', group: 'Fuel', factor: 0.000589 },
+    { id: 'kcal',   name: 'Kilocalories',   group: 'Thermal', factor: 860.421 }
+  ];
+
+  var CONV_FUN = [
+    { id: 'iphone',  icon: '📱', label: 'iPhone charges',      perKwh: 50,     unit: 'charges' },
+    { id: 'tesla',   icon: '🚗', label: 'Tesla Model 3 charges', perKwh: 0.0133, unit: 'charges' },
+    { id: 'homes',   icon: '🏠', label: 'US homes for a day',   perKwh: 0.0342, unit: 'home-days' },
+    { id: 'flights', icon: '✈️', label: 'NY→London flights',    perKwh: 0.000432, unit: 'flights' },
+    { id: 'showers', icon: '🚿', label: 'hot showers (8 min)',  perKwh: 0.79,   unit: 'showers' },
+    { id: 'gasoline',icon: '⛽', label: 'gallons of gasoline',   perKwh: 0.0297, unit: 'gallons' },
+    { id: 'coffee',  icon: '☕', label: 'pots of coffee',        perKwh: 6.67,   unit: 'pots' },
+    { id: 'bulb',    icon: '💡', label: 'LED bulb-hours',        perKwh: 100,    unit: 'hours' }
+  ];
+
+  function convToKwh(value, unitId) {
+    var u = CONV_UNITS.find(function(x){ return x.id === unitId; });
+    if (!u) return value;
+    return value / u.factor;
+  }
+
+  function formatConvValue(n) {
+    if (n === 0) return '0';
+    var abs = Math.abs(n);
+    if (abs >= 1e12) return (n / 1e12).toPrecision(4) + ' T';
+    if (abs >= 1e9) return (n / 1e9).toPrecision(4) + ' B';
+    if (abs >= 1e6) return (n / 1e6).toPrecision(4) + ' M';
+    if (abs >= 1000) return n.toLocaleString(undefined, { maximumFractionDigits: 2 });
+    if (abs >= 1) return n.toLocaleString(undefined, { maximumFractionDigits: 4 });
+    if (abs >= 0.001) return n.toPrecision(4);
+    return n.toExponential(3);
+  }
+
+  function updateConverter() {
+    var val = parseFloat(document.getElementById('conv-hero-value').value) || 0;
+    var unit = document.getElementById('conv-hero-unit').value;
+    var kwh = convToKwh(val, unit);
+
+    // Update unit cards
+    var grid = document.getElementById('conv-grid');
+    var html = '';
+    CONV_UNITS.forEach(function(u) {
+      var converted = kwh * u.factor;
+      html += '<div class="conv-card">' +
+        '<button class="conv-card-copy" title="Copy" onclick="navigator.clipboard.writeText(\'' + converted + '\')">📋</button>' +
+        '<div class="conv-card-value">' + formatConvValue(converted) + '</div>' +
+        '<div class="conv-card-unit">' + u.id + ' <span style="opacity:0.5">(' + u.name + ')</span></div>' +
+        '</div>';
+    });
+    grid.innerHTML = html;
+
+    // Update fun equivalents
+    var funGrid = document.getElementById('conv-fun-grid');
+    var funHtml = '';
+    CONV_FUN.forEach(function(f) {
+      var equiv = kwh * f.perKwh;
+      funHtml += '<div class="conv-fun-card">' +
+        '<div class="conv-fun-icon">' + f.icon + '</div>' +
+        '<div class="conv-fun-value">' + formatConvValue(equiv) + '</div>' +
+        '<div class="conv-fun-label">' + f.label + '</div>' +
+        '</div>';
+    });
+    funGrid.innerHTML = funHtml;
+  }
+
+  function initConverter() {
+    var input = document.getElementById('conv-hero-value');
+    var select = document.getElementById('conv-hero-unit');
+    if (!input || !select) return;
+    input.addEventListener('input', updateConverter);
+    select.addEventListener('change', updateConverter);
+    updateConverter();
+  }
+
+  // ── Energy in Perspective ──
+  var PERSP_ITEMS = [
+    { id: 'phone_charge',    name: '1 smartphone charge',         wh: 20,                category: 'Everyday' },
+    { id: 'led_hour',        name: '1 LED bulb for 1 hour',       wh: 10,                category: 'Everyday' },
+    { id: 'kettle_boil',     name: '1 kettle boil',               wh: 100,               category: 'Everyday' },
+    { id: 'laptop_hour',     name: '1 hour of laptop use',        wh: 50,                category: 'Everyday' },
+    { id: 'shower_8min',     name: '1 hot shower (8 min)',        wh: 1267,              category: 'Everyday' },
+    { id: 'washing_load',    name: '1 washing machine load',      wh: 500,               category: 'Household' },
+    { id: 'fridge_day',      name: 'Running a fridge for 1 day',  wh: 1000,              category: 'Household' },
+    { id: 'us_home_day',     name: 'Average US home for 1 day',   wh: 29200,             category: 'Household' },
+    { id: 'ev_full',         name: 'Fully charging a Tesla',      wh: 75000,             category: 'Transport' },
+    { id: 'gallon_gas',      name: '1 gallon of gasoline',        wh: 33700,             category: 'Transport' },
+    { id: 'barrel_oil',      name: '1 barrel of crude oil',       wh: 1700000,           category: 'Industry' },
+    { id: 'ton_coal',        name: '1 ton of coal',               wh: 8141000,           category: 'Industry' },
+    { id: 'lightning',       name: '1 lightning bolt',             wh: 1400000,           category: 'Nature' },
+    { id: 'kg_uranium',      name: '1 kg of uranium (reactor)',   wh: 24000000000,       category: 'Nuclear' },
+    { id: 'us_elec_day',     name: 'US electricity for 1 day',    wh: 11000000000000,    category: 'Country' },
+    { id: 'iceland_year',    name: 'Iceland per capita / year',   wh: 51915000,          category: 'Country' },
+    { id: 'chad_year',       name: 'Chad per capita / year',      wh: 21000,             category: 'Country' },
+    { id: 'human_day',       name: 'Human body energy for 1 day', wh: 2400,              category: 'Human' },
+    { id: 'marathon',        name: 'Running a marathon',          wh: 2600,              category: 'Human' },
+    { id: 'hiroshima',       name: 'Hiroshima bomb yield',        wh: 15000000000,       category: 'Extreme' },
+    { id: 'sun_earth_sec',   name: 'Sunlight hitting Earth / sec',wh: 48055555556,       category: 'Nature' },
+    { id: 'spacex_launch',   name: 'SpaceX Falcon 9 launch fuel', wh: 511000000,         category: 'Transport' }
+  ];
+
+  var PERSP_CARDS_DATA = [
+    { icon: '⛽', title: '1 gallon of gasoline', stat: '33.7 kWh', body: 'Enough to charge your smartphone every day for 4.6 years, or run a laptop for 674 hours straight.' },
+    { icon: '⚡', title: 'A single lightning bolt', stat: '1.4 MWh', body: 'Could power an average US home for about 1.2 days — not as much as Hollywood would have you believe.' },
+    { icon: '☢️', title: '1 kg of uranium', stat: '24,000 MWh', body: 'Contains more energy than 2,800 tons of coal. Could power ~2,200 US homes for an entire year.' },
+    { icon: '🌍', title: 'The Iceland–Chad gap', stat: '2,472×', body: 'The average Icelander uses 51,915 kWh of electricity per year. The average Chadian uses just 21 kWh — less than a single smartphone charge per day.' },
+    { icon: '🏃', title: 'Running a marathon', stat: '2.6 kWh', body: 'The total energy your body burns running 26.2 miles. An electric kettle uses that energy in about 26 boils.' },
+    { icon: '🚗', title: 'Tesla full charge', stat: '75 kWh', body: 'Equivalent to ~2.2 gallons of gasoline in energy content, but an EV converts ~85% to motion vs ~30% for a gas engine.' },
+    { icon: '☀️', title: 'Sunlight hitting Earth', stat: '173,000 TW', body: 'Every second, the Sun delivers more energy to Earth than all of human civilization uses in an entire day.' },
+    { icon: '🚀', title: 'SpaceX Falcon 9 launch', stat: '511 MWh', body: 'The kerosene fuel in a single rocket launch contains enough energy to power 17 US homes for an entire year.' },
+    { icon: '🏠', title: 'Average US home', stat: '29.2 kWh/day', body: 'About 10,657 kWh per year — 507× more electricity than the average person in Chad uses all year.' },
+    { icon: '🧊', title: 'Your refrigerator', stat: '1 kWh/day', body: 'Runs 24/7 but uses less energy than a single 8-minute electric shower. The magic of insulation and efficient compressors.' }
+  ];
+
+  function initPerspective() {
+    var sel = document.getElementById('persp-left');
+    if (!sel) return;
+
+    // Build dropdown grouped by category
+    var cats = {};
+    PERSP_ITEMS.forEach(function(item) {
+      if (!cats[item.category]) cats[item.category] = [];
+      cats[item.category].push(item);
+    });
+    var html = '';
+    Object.keys(cats).forEach(function(cat) {
+      html += '<optgroup label="' + cat + '">';
+      cats[cat].forEach(function(item) {
+        html += '<option value="' + item.id + '">' + item.name + '</option>';
+      });
+      html += '</optgroup>';
+    });
+    sel.innerHTML = html;
+    sel.value = 'gallon_gas';
+
+    sel.addEventListener('change', updatePerspective);
+    updatePerspective();
+
+    // Build cards
+    var cardsEl = document.getElementById('persp-cards');
+    if (cardsEl) {
+      var cardsHtml = '';
+      PERSP_CARDS_DATA.forEach(function(c) {
+        cardsHtml += '<div class="persp-card">' +
+          '<div class="persp-card-icon">' + c.icon + '</div>' +
+          '<div class="persp-card-title">' + c.title + '</div>' +
+          '<div class="persp-card-stat">' + c.stat + '</div>' +
+          '<div class="persp-card-body">' + c.body + '</div>' +
+          '</div>';
+      });
+      cardsEl.innerHTML = cardsHtml;
+    }
+  }
+
+  function formatEnergy(wh) {
+    if (wh >= 1e12) return (wh / 1e12).toFixed(1) + ' TWh';
+    if (wh >= 1e9) return (wh / 1e9).toFixed(1) + ' GWh';
+    if (wh >= 1e6) return (wh / 1e6).toFixed(1) + ' MWh';
+    if (wh >= 1000) return (wh / 1000).toFixed(1) + ' kWh';
+    return Math.round(wh) + ' Wh';
+  }
+
+  function updatePerspective() {
+    var selId = document.getElementById('persp-left').value;
+    var item = PERSP_ITEMS.find(function(x){ return x.id === selId; });
+    if (!item) return;
+
+    var leftVal = document.getElementById('persp-left-value');
+    leftVal.textContent = formatEnergy(item.wh);
+
+    // Calculate equivalents
+    var result = document.getElementById('persp-result');
+    var equivs = [];
+
+    PERSP_ITEMS.forEach(function(other) {
+      if (other.id === item.id) return;
+      var ratio = item.wh / other.wh;
+      if (ratio >= 1) {
+        equivs.push({ name: other.name, ratio: ratio, wh: other.wh });
+      }
+    });
+
+    // Sort by interest — pick a few diverse ones
+    equivs.sort(function(a,b){ return b.ratio - a.ratio; });
+    var top = equivs.slice(0, 3);
+
+    if (top.length > 0) {
+      var best = top[0];
+      var ratioStr = best.ratio >= 1000 ? formatConvValue(best.ratio) : best.ratio.toFixed(1);
+      result.innerHTML = '<div class="persp-result-number">' + ratioStr + '</div>' +
+        '<div class="persp-result-label">' + best.name + (best.ratio > 1 ? 's' : '') + '</div>';
+
+      // Update bars
+      var barLeft = document.getElementById('persp-bar-left');
+      var barRight = document.getElementById('persp-bar-right');
+      var ratioEl = document.getElementById('persp-ratio');
+
+      if (best.ratio > 1000) {
+        barLeft.style.flex = '1000';
+        barRight.style.flex = '1';
+      } else {
+        barLeft.style.flex = String(Math.round(best.ratio));
+        barRight.style.flex = '1';
+      }
+      barLeft.textContent = item.name;
+      barRight.textContent = '';
+      ratioEl.textContent = ratioStr + '× more energy';
+    } else {
+      // Item is small — show what's bigger
+      var bigger = [];
+      PERSP_ITEMS.forEach(function(other) {
+        if (other.id === item.id) return;
+        var ratio = other.wh / item.wh;
+        if (ratio >= 1) bigger.push({ name: other.name, ratio: ratio, wh: other.wh });
+      });
+      bigger.sort(function(a,b){ return a.ratio - b.ratio; });
+      var pick = bigger.length > 0 ? bigger[0] : null;
+      if (pick) {
+        var r = pick.ratio >= 1000 ? formatConvValue(pick.ratio) : pick.ratio.toFixed(1);
+        result.innerHTML = '<div class="persp-result-number">1/' + r + '</div>' +
+          '<div class="persp-result-label">of ' + pick.name + '</div>';
+        var barLeft = document.getElementById('persp-bar-left');
+        var barRight = document.getElementById('persp-bar-right');
+        var ratioEl = document.getElementById('persp-ratio');
+        barLeft.style.flex = '1';
+        barRight.style.flex = String(Math.min(Math.round(pick.ratio), 1000));
+        barLeft.textContent = item.name;
+        barRight.textContent = pick.name;
+        ratioEl.textContent = r + '× less energy';
+      }
+    }
+  }
+
   // ── Initialization ──
   function init() {
     buildGlanceLists();
@@ -1687,6 +2251,9 @@
     buildMovers();
     initComparison();
     initCalculator();
+    initLcoe();
+    initConverter();
+    initPerspective();
     buildRegional();
     initReadingProgress();
     initBackToTop();
@@ -1694,8 +2261,9 @@
     // Delay scatter chart to ensure canvas is ready
     setTimeout(drawScatter, 300);
 
-    // Delay calculator chart
+    // Delay calculator chart + LCOE charts
     setTimeout(function() { drawCalcChart(); updateCalcComparison(); }, 350);
+    setTimeout(function() { drawLcoeChart(); drawLcoeHistory(); }, 400);
 
     // Delay animations to avoid flash
     setTimeout(function() {
@@ -1710,6 +2278,8 @@
       resizeTimer = setTimeout(function() {
         drawScatter();
         drawCalcChart();
+        drawLcoeChart();
+        drawLcoeHistory();
       }, 200);
     });
   }

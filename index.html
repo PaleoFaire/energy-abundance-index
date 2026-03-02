@@ -28,7 +28,7 @@
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>%E2%9A%A1</text></svg>">
 
-    <link rel="stylesheet" href="styles.css?v=20260302b">
+    <link rel="stylesheet" href="styles.css?v=20260302c">
 </head>
 <body>
     <!-- Skip Link -->
@@ -51,6 +51,9 @@
                 <a href="#methodology">Methodology</a>
                 <a href="#compare">Compare</a>
                 <a href="#calculator">Calculator</a>
+                <a href="#lcoe">Costs</a>
+                <a href="#converter">Units</a>
+                <a href="#perspective">Perspective</a>
                 <a href="https://www.rationaloptimistsociety.com" target="_blank" rel="noopener" class="nav-ros">ROS &nearr;</a>
             </div>
             <button class="mobile-menu-btn" aria-label="Menu" id="mobile-menu-btn">
@@ -67,6 +70,9 @@
         <a href="#methodology" class="mobile-link">Methodology</a>
         <a href="#compare" class="mobile-link">Compare</a>
         <a href="#calculator" class="mobile-link">Calculator</a>
+        <a href="#lcoe" class="mobile-link">Costs</a>
+        <a href="#converter" class="mobile-link">Units</a>
+        <a href="#perspective" class="mobile-link">Perspective</a>
         <a href="https://www.rationaloptimistsociety.com" target="_blank" rel="noopener" class="mobile-link">ROS</a>
     </div>
 
@@ -433,6 +439,119 @@
         </div>
     </section>
 
+    <!-- ═══ LCOE — dark panel ═══ -->
+    <section id="lcoe" class="dark-panel lcoe-section">
+        <div class="container">
+            <p class="section-eyebrow light">ENERGY COSTS</p>
+            <h2 class="section-title light">Levelized Cost of Energy</h2>
+            <p class="section-desc light">Interactive comparison of electricity generation costs by technology &mdash; unsubsidized, $/MWh. Data: Lazard v18, IRENA&nbsp;2024.</p>
+
+            <div class="lcoe-controls">
+                <div class="lcoe-toggle-group">
+                    <label class="lcoe-toggle-label">Sort by</label>
+                    <div class="lcoe-toggle" id="lcoe-sort-toggle">
+                        <button class="lcoe-toggle-btn active" data-sort="mid">Midpoint</button>
+                        <button class="lcoe-toggle-btn" data-sort="low">Low Cost</button>
+                        <button class="lcoe-toggle-btn" data-sort="category">Category</button>
+                    </div>
+                </div>
+                <div class="lcoe-toggle-group">
+                    <label class="lcoe-toggle-label">Carbon price</label>
+                    <div class="lcoe-toggle" id="lcoe-carbon-toggle">
+                        <button class="lcoe-toggle-btn active" data-carbon="0">None</button>
+                        <button class="lcoe-toggle-btn" data-carbon="30">$30/ton</button>
+                        <button class="lcoe-toggle-btn" data-carbon="50">$50/ton</button>
+                        <button class="lcoe-toggle-btn" data-carbon="100">$100/ton</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lcoe-chart-wrap">
+                <canvas id="lcoe-chart" width="900" height="460"></canvas>
+                <div class="lcoe-tooltip" id="lcoe-tooltip"></div>
+            </div>
+
+            <h3 class="lcoe-sub-title">Cost Decline: 2010 &ndash; 2024</h3>
+            <p class="lcoe-sub-desc">Solar PV has fallen ~93%, batteries ~92%, onshore wind ~60% since 2010.</p>
+            <div class="lcoe-history-wrap">
+                <canvas id="lcoe-history-chart" width="900" height="340"></canvas>
+                <div class="lcoe-history-tooltip" id="lcoe-history-tooltip"></div>
+            </div>
+            <div class="lcoe-legend" id="lcoe-legend"></div>
+        </div>
+    </section>
+
+    <!-- ═══ UNIT CONVERTER — light panel ═══ -->
+    <section id="converter" class="light-panel converter-section">
+        <div class="container">
+            <p class="section-eyebrow">UTILITY</p>
+            <h2 class="section-title">Energy Unit Converter</h2>
+            <p class="section-desc">Type a value in any field &mdash; all others update instantly. The universal energy translator.</p>
+
+            <div class="conv-input-hero">
+                <input type="number" id="conv-hero-value" class="conv-hero-field" value="1" min="0" step="any" aria-label="Energy value">
+                <select id="conv-hero-unit" class="conv-hero-select" aria-label="Unit">
+                    <option value="kWh" selected>kWh</option>
+                    <option value="Wh">Wh</option>
+                    <option value="MWh">MWh</option>
+                    <option value="GWh">GWh</option>
+                    <option value="TWh">TWh</option>
+                    <option value="BTU">BTU</option>
+                    <option value="MMBTU">MMBTU</option>
+                    <option value="Therms">Therms</option>
+                    <option value="MJ">MJ</option>
+                    <option value="GJ">GJ</option>
+                    <option value="toe">toe</option>
+                    <option value="boe">boe</option>
+                </select>
+            </div>
+
+            <div class="conv-grid" id="conv-grid">
+                <!-- Populated by JS -->
+            </div>
+
+            <h3 class="conv-fun-title">Real-World Equivalents</h3>
+            <div class="conv-fun-grid" id="conv-fun-grid">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ PERSPECTIVE — dark panel ═══ -->
+    <section id="perspective" class="dark-panel perspective-section">
+        <div class="container">
+            <p class="section-eyebrow light">SCALE</p>
+            <h2 class="section-title light">Energy in Perspective</h2>
+            <p class="section-desc light">Pick two things. See the energy difference. Prepare to be amazed.</p>
+
+            <div class="persp-compare">
+                <div class="persp-side">
+                    <label class="persp-label">This&hellip;</label>
+                    <select id="persp-left" class="persp-select" aria-label="Left item"></select>
+                    <div class="persp-value" id="persp-left-value"></div>
+                </div>
+                <div class="persp-equals">=</div>
+                <div class="persp-side">
+                    <label class="persp-label">Equals&hellip;</label>
+                    <div class="persp-result" id="persp-result"></div>
+                </div>
+            </div>
+
+            <div class="persp-bar-wrap">
+                <div class="persp-bar-container">
+                    <div class="persp-bar persp-bar-left" id="persp-bar-left"></div>
+                    <div class="persp-bar persp-bar-right" id="persp-bar-right"></div>
+                </div>
+                <div class="persp-ratio" id="persp-ratio"></div>
+            </div>
+
+            <h3 class="persp-gallery-title">Mind-Blowing Energy Facts</h3>
+            <div class="persp-cards" id="persp-cards">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </section>
+
     <!-- ═══ SCATTER — dark panel ═══ -->
     <section id="charts" class="dark-panel charts-section">
         <div class="container">
@@ -591,7 +710,7 @@
     <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
-    <script src="data.js?v=20260302b"></script>
-    <script src="app.js?v=20260302b"></script>
+    <script src="data.js?v=20260302c"></script>
+    <script src="app.js?v=20260302c"></script>
 </body>
 </html>
