@@ -953,7 +953,7 @@
   // ── Scroll-Triggered Animations ──
   function initScrollAnimations() {
     // Add animation classes to sections
-    var sections = document.querySelectorAll('.insight-card, .insight-featured, .method-card, .zone-segment, .regional-card, .about-text, .about-callouts, .method-formula, .movers-card, .highlight-quote');
+    var sections = document.querySelectorAll('.insight-card, .insight-featured, .method-card, .zone-segment, .regional-card, .about-text, .about-callouts, .method-formula, .movers-card, .highlight-quote, .calc-layout');
     sections.forEach(function(el) {
       el.classList.add('animate-on-scroll');
     });
@@ -1046,6 +1046,591 @@
     }
   }
 
+  // ── Household Energy Calculator ──
+  var CALC_PRODUCTS = {
+    lighting: {
+      name: 'Lighting', icon: '\uD83D\uDCA1',
+      items: [
+        { id: 'led_bulb', name: 'LED Bulb (10W)', wattage: 10, inputType: 'hours', defaultValue: 5, unit: 'hrs' },
+        { id: 'incandescent', name: 'Incandescent Bulb (60W)', wattage: 60, inputType: 'hours', defaultValue: 3, unit: 'hrs' },
+        { id: 'fluorescent', name: 'Fluorescent Tube (36W)', wattage: 36, inputType: 'hours', defaultValue: 4, unit: 'hrs' }
+      ]
+    },
+    digital: {
+      name: 'Digital & Entertainment', icon: '\uD83D\uDCBB',
+      items: [
+        { id: 'laptop', name: 'Laptop', wattage: 50, inputType: 'hours', defaultValue: 6, unit: 'hrs' },
+        { id: 'desktop', name: 'Desktop Computer', wattage: 200, inputType: 'hours', defaultValue: 4, unit: 'hrs' },
+        { id: 'tv_led', name: 'LED TV (55")', wattage: 80, inputType: 'hours', defaultValue: 3, unit: 'hrs' },
+        { id: 'gaming', name: 'Gaming Console', wattage: 120, inputType: 'hours', defaultValue: 2, unit: 'hrs' },
+        { id: 'wifi', name: 'WiFi Router', wattage: null, inputType: 'fixed', defaultValue: 1, fixedWh: 240, unit: 'always on' },
+        { id: 'phone_charge', name: 'Smartphone Charge', wattage: null, inputType: 'fixed', defaultValue: 1, fixedWh: 20, unit: 'per day' },
+        { id: 'streaming', name: 'Streaming Video', wattage: 65, inputType: 'hours', defaultValue: 2, unit: 'hrs', note: 'TV + network combined' }
+      ]
+    },
+    kitchen: {
+      name: 'Kitchen', icon: '\uD83C\uDF73',
+      items: [
+        { id: 'fridge', name: 'Refrigerator', wattage: null, inputType: 'fixed', defaultValue: 1, fixedWh: 1000, unit: 'always on' },
+        { id: 'kettle', name: 'Electric Kettle', wattage: null, inputType: 'boils', defaultValue: 3, whPerUnit: 100, unit: 'boils' },
+        { id: 'microwave', name: 'Microwave', wattage: 1000, inputType: 'minutes', defaultValue: 10, unit: 'min' },
+        { id: 'oven', name: 'Electric Oven', wattage: 2500, inputType: 'minutes', defaultValue: 30, unit: 'min' },
+        { id: 'dishwasher', name: 'Dishwasher', wattage: null, inputType: 'cycles', defaultValue: 1, whPerUnit: 1500, unit: 'cycles' },
+        { id: 'induction', name: 'Induction Cooktop', wattage: 2000, inputType: 'minutes', defaultValue: 20, unit: 'min' },
+        { id: 'coffee', name: 'Coffee Maker', wattage: null, inputType: 'cycles', defaultValue: 2, whPerUnit: 100, unit: 'cups' },
+        { id: 'air_fryer', name: 'Air Fryer', wattage: 1000, inputType: 'minutes', defaultValue: 15, unit: 'min' }
+      ]
+    },
+    laundry: {
+      name: 'Laundry & Cleaning', icon: '\uD83E\uDDFA',
+      items: [
+        { id: 'washer', name: 'Washing Machine', wattage: null, inputType: 'cycles', defaultValue: 1, whPerUnit: 800, unit: 'loads' },
+        { id: 'dryer', name: 'Tumble Dryer', wattage: null, inputType: 'cycles', defaultValue: 1, whPerUnit: 2500, unit: 'loads' },
+        { id: 'iron', name: 'Clothes Iron', wattage: 1200, inputType: 'minutes', defaultValue: 15, unit: 'min' },
+        { id: 'vacuum', name: 'Vacuum Cleaner', wattage: 750, inputType: 'minutes', defaultValue: 20, unit: 'min' }
+      ]
+    },
+    climate: {
+      name: 'Heating & Cooling', icon: '\uD83C\uDF21\uFE0F',
+      items: [
+        { id: 'ac', name: 'Air Conditioner', wattage: 1500, inputType: 'hours', defaultValue: 4, unit: 'hrs' },
+        { id: 'heater', name: 'Space Heater', wattage: 1500, inputType: 'hours', defaultValue: 3, unit: 'hrs' },
+        { id: 'heat_pump', name: 'Heat Pump', wattage: 1000, inputType: 'hours', defaultValue: 6, unit: 'hrs' },
+        { id: 'fan', name: 'Ceiling Fan', wattage: 75, inputType: 'hours', defaultValue: 8, unit: 'hrs' },
+        { id: 'water_heater', name: 'Electric Water Heater', wattage: 4000, inputType: 'hours', defaultValue: 1, unit: 'hrs' },
+        { id: 'shower', name: 'Electric Shower', wattage: 9500, inputType: 'minutes', defaultValue: 8, unit: 'min' },
+        { id: 'hairdryer', name: 'Hairdryer', wattage: 1750, inputType: 'minutes', defaultValue: 5, unit: 'min' }
+      ]
+    },
+    transport: {
+      name: 'Electric Transport', icon: '\uD83D\uDE97',
+      items: [
+        { id: 'ev', name: 'Electric Car (per 10 mi)', wattage: null, inputType: 'cycles', defaultValue: 3, whPerUnit: 3000, unit: '\u00D710mi' },
+        { id: 'ebike', name: 'E-Bike Charge', wattage: null, inputType: 'cycles', defaultValue: 1, whPerUnit: 500, unit: 'charges' },
+        { id: 'escooter', name: 'E-Scooter Charge', wattage: null, inputType: 'cycles', defaultValue: 1, whPerUnit: 250, unit: 'charges' }
+      ]
+    },
+    outdoor: {
+      name: 'Outdoor & Garden', icon: '\uD83C\uDF3F',
+      items: [
+        { id: 'pool_pump', name: 'Pool Pump', wattage: 1500, inputType: 'hours', defaultValue: 6, unit: 'hrs' },
+        { id: 'mower', name: 'Electric Lawn Mower', wattage: 1400, inputType: 'minutes', defaultValue: 30, unit: 'min' },
+        { id: 'outdoor_lights', name: 'Outdoor Lights', wattage: 100, inputType: 'hours', defaultValue: 6, unit: 'hrs' }
+      ]
+    }
+  };
+
+  var CALC_PRICES = {
+    USA: { price: 0.16, currency: '$', name: 'United States' },
+    GBR: { price: 0.34, currency: '\u00A3', name: 'United Kingdom' },
+    DEU: { price: 0.40, currency: '\u20AC', name: 'Germany' },
+    FRA: { price: 0.25, currency: '\u20AC', name: 'France' },
+    JPN: { price: 27, currency: '\u00A5', name: 'Japan' },
+    AUS: { price: 0.30, currency: 'A$', name: 'Australia' },
+    IND: { price: 6.5, currency: '\u20B9', name: 'India' },
+    CHN: { price: 0.54, currency: '\u00A5', name: 'China' },
+    BRA: { price: 0.80, currency: 'R$', name: 'Brazil' }
+  };
+
+  var calcState = {
+    selections: {},
+    view: 'energy',
+    priceCountry: 'USA',
+    maxSelections: 12
+  };
+
+  var CALC_COMPARE_COUNTRIES = [
+    { iso: 'ISL', flag: '\uD83C\uDDEE\uD83C\uDDF8' },
+    { iso: 'USA', flag: '\uD83C\uDDFA\uD83C\uDDF8' },
+    { iso: 'DEU', flag: '\uD83C\uDDE9\uD83C\uDDEA' },
+    { iso: 'CHN', flag: '\uD83C\uDDE8\uD83C\uDDF3' },
+    { iso: 'IND', flag: '\uD83C\uDDEE\uD83C\uDDF3' },
+    { iso: 'TCD', flag: '\uD83C\uDDF9\uD83C\uDDE9' }
+  ];
+
+  function findCalcProduct(id) {
+    var found = null;
+    Object.keys(CALC_PRODUCTS).some(function(catKey) {
+      var p = CALC_PRODUCTS[catKey].items.find(function(item) { return item.id === id; });
+      if (p) { found = p; return true; }
+      return false;
+    });
+    return found;
+  }
+
+  function calcProductWh(id) {
+    var product = findCalcProduct(id);
+    if (!product || !calcState.selections[id]) return 0;
+    var value = calcState.selections[id].value;
+
+    switch (product.inputType) {
+      case 'hours':
+        return product.wattage * value;
+      case 'minutes':
+        return product.wattage * (value / 60);
+      case 'fixed':
+        return product.fixedWh;
+      case 'boils':
+      case 'cycles':
+        return (product.whPerUnit || 0) * value;
+      default:
+        return 0;
+    }
+  }
+
+  function calcTotalWh() {
+    var total = 0;
+    Object.keys(calcState.selections).forEach(function(id) {
+      total += calcProductWh(id);
+    });
+    return total;
+  }
+
+  function initCalculator() {
+    buildCalcCategories();
+    bindCalcEvents();
+    loadCalcFromURL();
+  }
+
+  function buildCalcCategories() {
+    var container = document.getElementById('calc-categories');
+    if (!container) return;
+    var html = '';
+
+    Object.keys(CALC_PRODUCTS).forEach(function(catKey) {
+      var cat = CALC_PRODUCTS[catKey];
+      html += '<div class="calc-category" data-category="' + catKey + '">' +
+        '<div class="calc-category-header">' +
+          '<span class="calc-category-name"><span class="calc-category-icon">' + cat.icon + '</span> ' + cat.name + '</span>' +
+          '<svg class="calc-category-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>' +
+        '</div>' +
+        '<div class="calc-category-items">';
+
+      cat.items.forEach(function(item) {
+        var step = item.inputType === 'hours' ? '0.5' : '1';
+        var isFixed = item.inputType === 'fixed';
+        html += '<div class="calc-item" data-id="' + item.id + '">' +
+          '<input type="checkbox" class="calc-item-checkbox" id="calc-cb-' + item.id + '">' +
+          '<label class="calc-item-label" for="calc-cb-' + item.id + '">' + item.name + '</label>' +
+          (isFixed ? '' : '<input type="number" class="calc-item-input" value="' + item.defaultValue + '" min="0" step="' + step + '">') +
+          '<span class="calc-item-unit">' + item.unit + '</span>' +
+        '</div>';
+      });
+
+      html += '</div></div>';
+    });
+
+    container.innerHTML = html;
+  }
+
+  function bindCalcEvents() {
+    // Accordion toggle
+    document.querySelectorAll('.calc-category-header').forEach(function(header) {
+      header.addEventListener('click', function() {
+        var cat = header.parentElement;
+        var wasOpen = cat.classList.contains('open');
+        document.querySelectorAll('.calc-category').forEach(function(c) {
+          c.classList.remove('open');
+          c.querySelector('.calc-category-header').classList.remove('active');
+        });
+        if (!wasOpen) {
+          cat.classList.add('open');
+          header.classList.add('active');
+        }
+      });
+    });
+
+    // Checkbox
+    document.querySelectorAll('.calc-item-checkbox').forEach(function(cb) {
+      cb.addEventListener('change', function() {
+        var item = cb.closest('.calc-item');
+        var id = item.getAttribute('data-id');
+        var input = item.querySelector('.calc-item-input');
+
+        if (cb.checked) {
+          var count = Object.keys(calcState.selections).length;
+          if (count >= calcState.maxSelections) {
+            cb.checked = false;
+            return;
+          }
+          var product = findCalcProduct(id);
+          calcState.selections[id] = { value: input ? parseFloat(input.value) || product.defaultValue : 1 };
+        } else {
+          delete calcState.selections[id];
+        }
+        onCalcChanged();
+      });
+    });
+
+    // Input changes
+    document.querySelectorAll('.calc-item-input').forEach(function(input) {
+      input.addEventListener('input', function() {
+        var item = input.closest('.calc-item');
+        var id = item.getAttribute('data-id');
+        if (calcState.selections[id]) {
+          calcState.selections[id].value = parseFloat(input.value) || 0;
+          onCalcChanged();
+        }
+      });
+    });
+
+    // View toggle
+    document.querySelectorAll('.calc-view-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.calc-view-btn').forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        calcState.view = btn.getAttribute('data-view');
+        drawCalcChart();
+      });
+    });
+
+    // Price country
+    var priceSelect = document.getElementById('calc-price-country');
+    if (priceSelect) {
+      priceSelect.addEventListener('change', function() {
+        calcState.priceCountry = priceSelect.value;
+        if (calcState.view === 'cost') drawCalcChart();
+      });
+    }
+
+    // Clear
+    document.getElementById('calc-clear').addEventListener('click', function() {
+      calcState.selections = {};
+      document.querySelectorAll('.calc-item-checkbox').forEach(function(cb) { cb.checked = false; });
+      document.querySelectorAll('.calc-item').forEach(function(item) { item.classList.remove('disabled'); });
+      onCalcChanged();
+    });
+
+    // Share
+    document.getElementById('calc-share').addEventListener('click', shareCalc);
+
+    // Download
+    document.getElementById('calc-download').addEventListener('click', downloadCalcChart);
+  }
+
+  function onCalcChanged() {
+    updateCalcCount();
+    drawCalcChart();
+    updateCalcComparison();
+    updateCalcURL();
+  }
+
+  function updateCalcCount() {
+    var count = Object.keys(calcState.selections).length;
+    var countEl = document.getElementById('calc-count');
+    if (countEl) countEl.textContent = count;
+
+    // Disable unchecked items at max
+    document.querySelectorAll('.calc-item').forEach(function(item) {
+      var cb = item.querySelector('.calc-item-checkbox');
+      if (count >= calcState.maxSelections && !cb.checked) {
+        item.classList.add('disabled');
+      } else {
+        item.classList.remove('disabled');
+      }
+    });
+  }
+
+  function drawCalcChart() {
+    var canvas = document.getElementById('calc-chart');
+    var emptyState = document.getElementById('calc-chart-empty');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+
+    // Gather items
+    var items = [];
+    Object.keys(calcState.selections).forEach(function(id) {
+      var wh = calcProductWh(id);
+      var product = findCalcProduct(id);
+      if (product && wh > 0) {
+        items.push({ id: id, name: product.name, wh: wh });
+      }
+    });
+    items.sort(function(a, b) { return b.wh - a.wh; });
+
+    // Update total
+    var total = calcTotalWh();
+    var totalEl = document.getElementById('calc-total');
+    if (totalEl) totalEl.textContent = fmt(Math.round(total));
+
+    // Show/hide empty state
+    if (items.length === 0) {
+      if (emptyState) emptyState.classList.remove('hidden');
+      canvas.style.display = 'none';
+      return;
+    }
+    if (emptyState) emptyState.classList.add('hidden');
+    canvas.style.display = 'block';
+
+    // Sizing
+    var dpr = window.devicePixelRatio || 1;
+    var container = document.getElementById('calc-chart-container');
+    var cw = container.offsetWidth - 32;
+    var barH = 28;
+    var gap = 10;
+    var padTop = 10;
+    var padBottom = 10;
+    var padLeft = 160;
+    var padRight = 100;
+    var ch = padTop + items.length * (barH + gap) + padBottom;
+
+    canvas.width = cw * dpr;
+    canvas.height = ch * dpr;
+    canvas.style.width = cw + 'px';
+    canvas.style.height = ch + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    ctx.clearRect(0, 0, cw, ch);
+
+    // Convert for display
+    var priceData = CALC_PRICES[calcState.priceCountry];
+    var displayItems = items.map(function(item) {
+      if (calcState.view === 'cost') {
+        var cost = (item.wh / 1000) * priceData.price;
+        return { name: item.name, value: cost, label: priceData.currency + cost.toFixed(2) };
+      }
+      return { name: item.name, value: item.wh, label: fmt(Math.round(item.wh)) + ' Wh' };
+    });
+
+    var maxVal = Math.max.apply(null, displayItems.map(function(d) { return d.value; }));
+    if (maxVal === 0) maxVal = 1;
+    var chartW = cw - padLeft - padRight;
+
+    // Color palette
+    var barColors = ['#10b981','#14b8a6','#06b6d4','#0891b2','#0e7490','#155e75','#164e63','#134e4a','#065f46','#047857','#059669','#10b981'];
+
+    displayItems.forEach(function(item, i) {
+      var y = padTop + i * (barH + gap);
+      var bw = Math.max((item.value / maxVal) * chartW, 2);
+      var color = barColors[i % barColors.length];
+
+      // Bar with rounded corners
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      var r = 4;
+      ctx.moveTo(padLeft + r, y);
+      ctx.lineTo(padLeft + bw - r, y);
+      ctx.quadraticCurveTo(padLeft + bw, y, padLeft + bw, y + r);
+      ctx.lineTo(padLeft + bw, y + barH - r);
+      ctx.quadraticCurveTo(padLeft + bw, y + barH, padLeft + bw - r, y + barH);
+      ctx.lineTo(padLeft + r, y + barH);
+      ctx.quadraticCurveTo(padLeft, y + barH, padLeft, y + barH - r);
+      ctx.lineTo(padLeft, y + r);
+      ctx.quadraticCurveTo(padLeft, y, padLeft + r, y);
+      ctx.closePath();
+      ctx.fill();
+
+      // Label left
+      ctx.fillStyle = '#1A1A2E';
+      ctx.font = '12px Inter, -apple-system, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      var labelText = item.name.length > 22 ? item.name.substring(0, 21) + '\u2026' : item.name;
+      ctx.fillText(labelText, padLeft - 10, y + barH / 2);
+
+      // Value right of bar
+      ctx.fillStyle = '#4A4A68';
+      ctx.font = '600 12px Inter, -apple-system, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(item.label, padLeft + bw + 8, y + barH / 2);
+    });
+
+    // Store bar positions for hover
+    canvas._calcBars = displayItems.map(function(item, i) {
+      var y = padTop + i * (barH + gap);
+      var bw = Math.max((item.value / maxVal) * chartW, 2);
+      return { x: padLeft, y: y, w: bw, h: barH, name: item.name, label: item.label };
+    });
+  }
+
+  // Calculator chart hover
+  (function() {
+    var calcCanvas = document.getElementById('calc-chart');
+    var calcTooltip = document.getElementById('calc-chart-tooltip');
+    if (!calcCanvas || !calcTooltip) return;
+
+    calcCanvas.addEventListener('mousemove', function(e) {
+      if (!calcCanvas._calcBars) return;
+      var rect = calcCanvas.getBoundingClientRect();
+      var mx = e.clientX - rect.left;
+      var my = e.clientY - rect.top;
+      var found = null;
+
+      calcCanvas._calcBars.forEach(function(bar) {
+        if (mx >= bar.x && mx <= bar.x + bar.w + 100 && my >= bar.y && my <= bar.y + bar.h) {
+          found = bar;
+        }
+      });
+
+      if (found) {
+        calcTooltip.innerHTML = '<strong>' + found.name + '</strong><br>' + found.label;
+        calcTooltip.classList.add('active');
+        calcTooltip.style.left = (mx + 16) + 'px';
+        calcTooltip.style.top = (my - 10) + 'px';
+        calcCanvas.style.cursor = 'pointer';
+      } else {
+        calcTooltip.classList.remove('active');
+        calcCanvas.style.cursor = 'default';
+      }
+    });
+
+    calcCanvas.addEventListener('mouseleave', function() {
+      calcTooltip.classList.remove('active');
+    });
+  })();
+
+  function updateCalcComparison() {
+    var total = calcTotalWh();
+    var compEl = document.getElementById('calc-comparison');
+    var gridEl = document.getElementById('calc-comparison-grid');
+    var dailyEl = document.getElementById('calc-user-daily');
+    if (!compEl || !gridEl) return;
+
+    if (total === 0) {
+      compEl.style.display = 'none';
+      return;
+    }
+    compEl.style.display = 'block';
+    if (dailyEl) dailyEl.textContent = fmt(Math.round(total)) + ' Wh/day';
+
+    var html = '';
+    CALC_COMPARE_COUNTRIES.forEach(function(cc) {
+      var d = dataByISO[cc.iso];
+      if (!d || !d.electricityPerCapita) return;
+
+      var countryDailyWh = (d.electricityPerCapita * 1000) / 365;
+      var ratio = total / countryDailyWh;
+      var ratioText = '';
+      var ratioClass = '';
+
+      if (ratio > 1.05) {
+        ratioText = ratio.toFixed(1) + 'x more';
+        ratioClass = 'more';
+      } else if (ratio < 0.95) {
+        ratioText = (1/ratio).toFixed(1) + 'x less';
+        ratioClass = 'less';
+      } else {
+        ratioText = 'About equal';
+        ratioClass = 'equal';
+      }
+
+      html += '<div class="calc-country-compare">' +
+        '<div class="calc-cc-flag">' + cc.flag + '</div>' +
+        '<div class="calc-cc-name">' + d.country + '</div>' +
+        '<div class="calc-cc-value">' + fmtCompact(Math.round(countryDailyWh)) + '</div>' +
+        '<div class="calc-cc-ratio ' + ratioClass + '">You: ' + ratioText + '</div>' +
+      '</div>';
+    });
+
+    gridEl.innerHTML = html;
+  }
+
+  function updateCalcURL() {
+    var parts = [];
+    Object.keys(calcState.selections).forEach(function(id) {
+      parts.push(id + ':' + calcState.selections[id].value);
+    });
+    if (parts.length === 0) return;
+
+    try {
+      var url = new URL(window.location.href);
+      url.searchParams.set('calc', parts.join(','));
+      window.history.replaceState({}, '', url);
+    } catch(e) { /* ignore */ }
+  }
+
+  function loadCalcFromURL() {
+    try {
+      var params = new URLSearchParams(window.location.search);
+      var calcParam = params.get('calc');
+      if (!calcParam) return;
+
+      calcParam.split(',').forEach(function(chunk) {
+        var parts = chunk.split(':');
+        if (parts.length >= 2) {
+          var id = parts[0];
+          var value = parseFloat(parts[1]);
+          if (isNaN(value)) return;
+          var product = findCalcProduct(id);
+          if (!product) return;
+
+          var cb = document.getElementById('calc-cb-' + id);
+          var item = document.querySelector('.calc-item[data-id="' + id + '"]');
+          var input = item ? item.querySelector('.calc-item-input') : null;
+          if (cb) cb.checked = true;
+          if (input) input.value = value;
+          calcState.selections[id] = { value: value };
+        }
+      });
+
+      onCalcChanged();
+    } catch(e) { /* ignore */ }
+  }
+
+  function shareCalc() {
+    var parts = [];
+    Object.keys(calcState.selections).forEach(function(id) {
+      parts.push(id + ':' + calcState.selections[id].value);
+    });
+
+    var url = window.location.origin + window.location.pathname + '?calc=' + parts.join(',') + '#calculator';
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(function() {
+        var btn = document.getElementById('calc-share');
+        var orig = btn.innerHTML;
+        btn.textContent = 'Copied!';
+        setTimeout(function() { btn.innerHTML = orig; }, 2000);
+      });
+    } else {
+      prompt('Copy this link:', url);
+    }
+  }
+
+  function downloadCalcChart() {
+    var canvas = document.getElementById('calc-chart');
+    if (!canvas || !canvas._calcBars || canvas._calcBars.length === 0) return;
+
+    var dlCanvas = document.createElement('canvas');
+    var scale = 2;
+    dlCanvas.width = canvas.width;
+    dlCanvas.height = canvas.height + 80 * (window.devicePixelRatio || 1);
+    var ctx = dlCanvas.getContext('2d');
+
+    var dpr = window.devicePixelRatio || 1;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var w = canvas.width / dpr;
+    var h = dlCanvas.height / dpr;
+
+    // White bg
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, w, h);
+
+    // Title
+    ctx.fillStyle = '#1A1A2E';
+    ctx.font = 'bold 18px Playfair Display, Georgia, serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText('Household Energy Use \u2014 ' + fmt(Math.round(calcTotalWh())) + ' Wh/day', 16, 12);
+
+    // Draw chart below title
+    ctx.drawImage(canvas, 0, 40 * dpr, canvas.width, canvas.height, 0, 40, canvas.width / dpr, canvas.height / dpr);
+
+    // Watermark
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.font = '11px Inter, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('ROS Energy Abundance Index \u2022 rationaloptimistsociety.com', w - 16, h - 12);
+
+    dlCanvas.toBlob(function(blob) {
+      var link = document.createElement('a');
+      link.download = 'household-energy-calculator.png';
+      link.href = URL.createObjectURL(blob);
+      link.click();
+      URL.revokeObjectURL(link.href);
+    }, 'image/png');
+  }
+
   // ── Initialization ──
   function init() {
     buildGlanceLists();
@@ -1053,6 +1638,7 @@
     renderRankings();
     buildMovers();
     initComparison();
+    initCalculator();
     buildRegional();
     initReadingProgress();
     initBackToTop();
@@ -1060,17 +1646,23 @@
     // Delay scatter chart to ensure canvas is ready
     setTimeout(drawScatter, 300);
 
+    // Delay calculator chart
+    setTimeout(function() { drawCalcChart(); updateCalcComparison(); }, 350);
+
     // Delay animations to avoid flash
     setTimeout(function() {
       initScrollAnimations();
       animateCounters();
     }, 100);
 
-    // Redraw chart on resize
+    // Redraw charts on resize
     var resizeTimer;
     window.addEventListener('resize', function() {
       clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(drawScatter, 200);
+      resizeTimer = setTimeout(function() {
+        drawScatter();
+        drawCalcChart();
+      }, 200);
     });
   }
 

@@ -28,7 +28,7 @@
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>%E2%9A%A1</text></svg>">
 
-    <link rel="stylesheet" href="styles.css?v=20260224a">
+    <link rel="stylesheet" href="styles.css?v=20260302a">
 </head>
 <body>
     <!-- Skip Link -->
@@ -50,6 +50,7 @@
                 <a href="#insights">Insights</a>
                 <a href="#methodology">Methodology</a>
                 <a href="#compare">Compare</a>
+                <a href="#calculator">Calculator</a>
                 <a href="https://www.rationaloptimistsociety.com" target="_blank" rel="noopener" class="nav-ros">ROS &nearr;</a>
             </div>
             <button class="mobile-menu-btn" aria-label="Menu" id="mobile-menu-btn">
@@ -65,6 +66,7 @@
         <a href="#insights" class="mobile-link">Insights</a>
         <a href="#methodology" class="mobile-link">Methodology</a>
         <a href="#compare" class="mobile-link">Compare</a>
+        <a href="#calculator" class="mobile-link">Calculator</a>
         <a href="https://www.rationaloptimistsociety.com" target="_blank" rel="noopener" class="mobile-link">ROS</a>
     </div>
 
@@ -351,6 +353,86 @@
         </div>
     </section>
 
+    <!-- ═══ CALCULATOR — light panel ═══ -->
+    <section id="calculator" class="light-panel calculator-section">
+        <div class="container">
+            <p class="section-eyebrow">HOUSEHOLD ENERGY</p>
+            <h2 class="section-title">How Much Energy Do You Use?</h2>
+            <p class="section-desc">Select your daily appliances and activities to see how your household energy use compares to countries around the world.</p>
+
+            <div class="calc-layout">
+                <!-- Left: Product selector -->
+                <div class="calc-controls">
+                    <div class="calc-summary-bar">
+                        <div class="calc-summary-total">
+                            <span class="calc-total-number" id="calc-total">0</span>
+                            <span class="calc-total-unit">Wh / day</span>
+                        </div>
+                        <div class="calc-summary-actions">
+                            <button class="calc-btn-clear" id="calc-clear">Clear All</button>
+                            <button class="calc-btn-share" id="calc-share">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+                                Share
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="calc-categories" id="calc-categories">
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <p class="calc-selection-count"><span id="calc-count">0</span> of 12 items selected</p>
+                </div>
+
+                <!-- Right: Chart + comparison -->
+                <div class="calc-chart-area">
+                    <div class="calc-chart-header">
+                        <div class="calc-view-toggle" id="calc-view-toggle">
+                            <button class="calc-view-btn active" data-view="energy">Energy (Wh)</button>
+                            <button class="calc-view-btn" data-view="cost">Cost</button>
+                        </div>
+                        <select class="calc-country-select" id="calc-price-country" aria-label="Country for cost">
+                            <option value="USA">United States ($)</option>
+                            <option value="GBR">United Kingdom (&pound;)</option>
+                            <option value="DEU">Germany (&euro;)</option>
+                            <option value="FRA">France (&euro;)</option>
+                            <option value="JPN">Japan (&yen;)</option>
+                            <option value="AUS">Australia (A$)</option>
+                            <option value="IND">India (&rupee;)</option>
+                            <option value="CHN">China (&yen;)</option>
+                            <option value="BRA">Brazil (R$)</option>
+                        </select>
+                    </div>
+
+                    <div class="calc-chart-container" id="calc-chart-container">
+                        <canvas id="calc-chart"></canvas>
+                        <div class="calc-chart-empty" id="calc-chart-empty">
+                            <div class="calc-empty-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                            </div>
+                            <p>Select items from the left to visualize your daily energy use</p>
+                        </div>
+                        <div class="calc-chart-tooltip" id="calc-chart-tooltip"></div>
+                    </div>
+
+                    <!-- Country comparison -->
+                    <div class="calc-comparison" id="calc-comparison" style="display:none;">
+                        <div class="calc-comparison-header">
+                            <span class="calc-comparison-label">Your daily electricity vs. national averages</span>
+                            <span class="calc-comparison-total" id="calc-user-daily">0 Wh/day</span>
+                        </div>
+                        <div class="calc-comparison-grid" id="calc-comparison-grid"></div>
+                    </div>
+
+                    <button class="calc-download-btn" id="calc-download">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Download Chart
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- ═══ SCATTER — dark panel ═══ -->
     <section id="charts" class="dark-panel charts-section">
         <div class="container">
@@ -509,7 +591,7 @@
     <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
-    <script src="data.js?v=20260224a"></script>
-    <script src="app.js?v=20260224a"></script>
+    <script src="data.js?v=20260302a"></script>
+    <script src="app.js?v=20260302a"></script>
 </body>
 </html>
