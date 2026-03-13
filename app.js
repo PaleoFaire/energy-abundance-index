@@ -2292,7 +2292,7 @@
   function calculateHormuzScores() {
     if (typeof HORMUZ_DATA === 'undefined') return;
 
-    // Find min/max energyIntensity for normalization
+    // Find min/max energyIntensity for normalization (detailed tier)
     var intensities = [];
     HORMUZ_DATA.forEach(function(d) {
       if (!d.isExporter) intensities.push(d.energyIntensity);
@@ -2301,11 +2301,15 @@
     var eiMax = Math.max.apply(null, intensities);
     var eiRange = eiMax - eiMin || 1;
 
+    // Build lookup of detailed ISO3 codes
+    var hormuzISOs = {};
+    HORMUZ_DATA.forEach(function(d) { hormuzISOs[d.iso3] = true; });
+
+    // ── Detailed tier (48 countries from HORMUZ_DATA) ──
     hzScored = HORMUZ_DATA.map(function(d) {
       var sub = {};
 
       if (d.isExporter) {
-        // Gulf exporters: revenue exposure score
         var totalExport = d.oilProduction - d.oilConsumption;
         var exportFrac = totalExport > 0 ? d.hormuzCrudeShare / (d.oilProduction / 20) : 0;
         exportFrac = Math.min(exportFrac, 1);
@@ -2318,35 +2322,24 @@
         sub.economicAmplification = 0;
         var compositeRaw = exportFrac * (1 - bypassRatio) * 60;
         var composite = Math.min(Math.max(compositeRaw, 0), 60);
-
-        // Override sub-scores for display (export-specific)
         sub.exportExposure = composite;
         sub.bypassProtection = bypassRatio * 100;
 
         return {
-          iso3: d.iso3,
-          country: d.country,
+          iso3: d.iso3, country: d.country,
           score: Math.round(composite * 10) / 10,
-          sub: sub,
-          isExporter: true,
-          data: d
+          sub: sub, isExporter: true, tier: 'detailed', data: d
         };
       }
 
-      // Importers: 6-component formula
       var oilDep = d.oilConsumption > 0 ? Math.max(0, (d.oilConsumption - d.oilProduction) / d.oilConsumption) : 0;
       sub.oilImportDep = oilDep * 100;
-
       sub.gulfConcentration = d.gulfOilImportShare * oilDep * 100;
-
       var lngRaw = d.lngImportDep * d.hormuzLngShare * 5;
       sub.lngExposure = Math.min(lngRaw, 1) * 100;
-
       var sprCapped = Math.min(d.sprDays, 180);
       sub.reserveGap = (1 - sprCapped / 180) * 100;
-
       sub.transitionShield = (1 - d.renewableShare) * 100;
-
       var eiNorm = eiRange > 0 ? (d.energyIntensity - eiMin) / eiRange : 0.5;
       sub.economicAmplification = eiNorm * 100;
 
@@ -2356,18 +2349,89 @@
                     + sub.reserveGap * 0.15
                     + sub.transitionShield * 0.10
                     + sub.economicAmplification * 0.15;
-
       composite = Math.min(Math.max(composite, 0), 100);
 
       return {
-        iso3: d.iso3,
-        country: d.country,
+        iso3: d.iso3, country: d.country,
         score: Math.round(composite * 10) / 10,
-        sub: sub,
-        isExporter: false,
-        data: d
+        sub: sub, isExporter: false, tier: 'detailed', data: d
       };
     });
+
+    // ── Estimated tier (remaining EAI_DATA countries) ──
+    if (typeof EAI_DATA !== 'undefined') {
+      var MARKET_DISCOUNT = 0.7;
+
+      // Pre-compute normalization ranges (log-scale GDP)
+      var gdpLogs = [];
+      var eiProxies = [];
+      EAI_DATA.forEach(function(e) {
+        if (e.gdpPerCapita != null && e.gdpPerCapita > 0) {
+          gdpLogs.push(Math.log(e.gdpPerCapita));
+        }
+        if (e.primaryEnergy != null && e.gdpPerCapita != null && e.gdpPerCapita > 0) {
+          eiProxies.push(e.primaryEnergy / e.gdpPerCapita);
+        }
+      });
+      var gdpLogMin = Math.min.apply(null, gdpLogs);
+      var gdpLogMax = Math.max.apply(null, gdpLogs);
+      var gdpLogRange = gdpLogMax - gdpLogMin || 1;
+      var eiPMin = Math.min.apply(null, eiProxies);
+      var eiPMax = Math.max.apply(null, eiProxies);
+      var eiPRange = eiPMax - eiPMin || 1;
+
+      EAI_DATA.forEach(function(eai) {
+        if (hormuzISOs[eai.iso3]) return;
+        if (eai.primaryEnergy == null || eai.gdpPerCapita == null || eai.gdpPerCapita <= 0) return;
+        if (eai.lowCarbonShare == null) return;
+
+        // 1. Fossil Fuel Dependency (40%)
+        var fossilDep = (1 - (eai.lowCarbonShare || 0) / 100) * 100;
+
+        // 2. Economic Vulnerability (25%) — inverse log-normalized GDP
+        var gdpLogNorm = (Math.log(eai.gdpPerCapita) - gdpLogMin) / gdpLogRange;
+        var econVuln = (1 - gdpLogNorm) * 100;
+
+        // 3. Energy Intensity Proxy (20%)
+        var eiProxy = eai.primaryEnergy / eai.gdpPerCapita;
+        var eiPNorm = (eiProxy - eiPMin) / eiPRange;
+        var intensityScore = eiPNorm * 100;
+
+        // 4. Electrification Gap (15%)
+        var electr = (eai.electrificationRatio != null) ? eai.electrificationRatio : 0.15;
+        var electrGap = (1 - Math.min(electr, 1)) * 100;
+
+        var rawScore = fossilDep * 0.40
+                     + econVuln * 0.25
+                     + intensityScore * 0.20
+                     + electrGap * 0.15;
+
+        var composite = rawScore * MARKET_DISCOUNT;
+        composite = Math.min(Math.max(composite, 0), 100);
+
+        var sub = {
+          fossilFuelDep: fossilDep,
+          economicVulnerability: econVuln,
+          energyIntensityProxy: intensityScore,
+          electrificationGap: electrGap,
+          oilImportDep: 0, gulfConcentration: 0, lngExposure: 0,
+          reserveGap: 0, transitionShield: fossilDep, economicAmplification: intensityScore
+        };
+
+        hzScored.push({
+          iso3: eai.iso3, country: eai.country,
+          score: Math.round(composite * 10) / 10,
+          sub: sub, isExporter: false, tier: 'estimated',
+          data: {
+            gulfOilImportShare: 0, hormuzCrudeShare: 0, sprDays: 0,
+            renewableShare: (eai.lowCarbonShare || 0) / 100,
+            energyIntensity: eiProxy, gdpTrillions: null,
+            oilConsumption: 0, oilProduction: 0,
+            lngImportDep: 0, hormuzLngShare: 0, bypassCapacity: 0, isExporter: false
+          }
+        });
+      });
+    }
 
     // Sort by score descending and assign ranks
     hzScored.sort(function(a, b) { return b.score - a.score; });
@@ -2421,6 +2485,8 @@
       if (search && d.country.toLowerCase().indexOf(search) === -1) return false;
       if (typeFilter === 'importers' && d.isExporter) return false;
       if (typeFilter === 'exporters' && !d.isExporter) return false;
+      if (typeFilter === 'detailed' && d.tier === 'estimated') return false;
+      if (typeFilter === 'estimated' && d.tier !== 'estimated') return false;
       return true;
     });
 
@@ -2442,10 +2508,21 @@
     filtered.forEach(function(d) {
       var cls = hzScoreClass(d.score);
       var badge = d.isExporter ? '<span class="hz-exporter-badge">Exporter</span>' : '';
-      var oilDep = d.isExporter ? '—' : (d.sub.oilImportDep || 0).toFixed(0) + '%';
-      var gulf = d.isExporter ? '—' : ((d.data.gulfOilImportShare || 0) * 100).toFixed(0) + '%';
-      var spr = d.data.sprDays >= 999 ? '∞' : (d.data.sprDays || 0);
-      var renew = ((d.data.renewableShare || 0) * 100).toFixed(0) + '%';
+      if (d.tier === 'estimated') badge += '<span class="hz-estimated-badge">Est.</span>';
+      var oilDep, gulf, spr, renew;
+      if (d.tier === 'estimated') {
+        oilDep = '—'; gulf = '—'; spr = '—';
+        renew = ((d.data.renewableShare || 0) * 100).toFixed(0) + '%';
+      } else if (d.isExporter) {
+        oilDep = '—'; gulf = '—';
+        spr = d.data.sprDays >= 999 ? '∞' : (d.data.sprDays || 0);
+        renew = ((d.data.renewableShare || 0) * 100).toFixed(0) + '%';
+      } else {
+        oilDep = (d.sub.oilImportDep || 0).toFixed(0) + '%';
+        gulf = ((d.data.gulfOilImportShare || 0) * 100).toFixed(0) + '%';
+        spr = d.data.sprDays >= 999 ? '∞' : (d.data.sprDays || 0);
+        renew = ((d.data.renewableShare || 0) * 100).toFixed(0) + '%';
+      }
 
       html += '<tr>'
         + '<td class="td-rank">' + d.rank + '</td>'
@@ -2514,7 +2591,7 @@
           fillColor: d ? hzCountryColor(d.score) : '#1a1a1a',
           weight: 0.5,
           color: 'rgba(255,255,255,0.1)',
-          fillOpacity: d ? 0.85 : 0.3
+          fillOpacity: d ? (d.tier === 'estimated' ? 0.55 : 0.85) : 0.3
         };
       },
       onEachFeature: function(feature, layer) {
@@ -2526,10 +2603,11 @@
           this.setStyle({ weight: 2, color: '#fff', fillOpacity: 1 });
           if (tooltip) {
             var lbl = d.isExporter ? 'Exporter' : hzScoreLabel(d.score);
-            tooltip.innerHTML = '<strong>' + d.country + '</strong><br>'
+            var tierTag = d.tier === 'estimated' ? ' (Est.)' : '';
+            tooltip.innerHTML = '<strong>' + d.country + tierTag + '</strong><br>'
               + 'Exposure: <span style="color:' + hzScoreColor(d.score) + ';font-weight:700">' + d.score.toFixed(1) + '</span>'
               + ' (' + lbl + ')<br>'
-              + 'Rank: #' + d.rank + ' of 48';
+              + 'Rank: #' + d.rank + ' of ' + hzScored.length;
             tooltip.style.display = 'block';
           }
         });
@@ -2554,7 +2632,7 @@
   }
 
   // ── Radar / Spider Chart ──
-  function drawHzRadar(canvasId, subScores) {
+  function drawHzRadar(canvasId, subScores, isEstimated) {
     var canvas = document.getElementById(canvasId);
     if (!canvas) return;
     var ctx = canvas.getContext('2d');
@@ -2571,8 +2649,14 @@
     var cy = size / 2;
     var radius = size * 0.38;
 
-    var labels = ['Oil Import\nDependency', 'Gulf\nConcentration', 'LNG\nExposure', 'Reserve\nGap', 'Transition\n(lack of)', 'Economic\nAmplification'];
-    var keys = ['oilImportDep', 'gulfConcentration', 'lngExposure', 'reserveGap', 'transitionShield', 'economicAmplification'];
+    var labels, keys;
+    if (isEstimated) {
+      labels = ['Fossil Fuel\nDependency', 'Economic\nVulnerability', 'Energy\nIntensity', 'Electrification\nGap'];
+      keys = ['fossilFuelDep', 'economicVulnerability', 'energyIntensityProxy', 'electrificationGap'];
+    } else {
+      labels = ['Oil Import\nDependency', 'Gulf\nConcentration', 'LNG\nExposure', 'Reserve\nGap', 'Transition\n(lack of)', 'Economic\nAmplification'];
+      keys = ['oilImportDep', 'gulfConcentration', 'lngExposure', 'reserveGap', 'transitionShield', 'economicAmplification'];
+    }
     var n = labels.length;
 
     ctx.clearRect(0, 0, size, size);
@@ -2669,15 +2753,16 @@
     if (!d) return;
 
     // Draw radar
-    drawHzRadar('hz-radar-chart', d.sub);
+    drawHzRadar('hz-radar-chart', d.sub, d.tier === 'estimated');
 
     // Header
     var header = document.getElementById('hz-detail-header');
     if (header) {
       var lbl = d.isExporter ? 'Exporter' : hzScoreLabel(d.score);
+      var tierNote = d.tier === 'estimated' ? ' <span class="hz-estimated-badge">Estimated</span>' : '';
       header.innerHTML = '<div class="hz-detail-score-big ' + hzScoreClass(d.score) + '">' + d.score.toFixed(1) + '</div>'
-        + '<div class="hz-detail-score-label ' + hzScoreClass(d.score) + '">' + lbl + '</div>'
-        + '<div class="hz-detail-rank">Rank #' + d.rank + ' of 48 countries</div>';
+        + '<div class="hz-detail-score-label ' + hzScoreClass(d.score) + '">' + lbl + tierNote + '</div>'
+        + '<div class="hz-detail-rank">Rank #' + d.rank + ' of ' + hzScored.length + ' countries</div>';
     }
 
     // Breakdown bars
@@ -2690,6 +2775,13 @@
           { label: 'Bypass Protection', value: (d.sub.bypassProtection || 0).toFixed(0) + '%', pct: d.sub.bypassProtection || 0 },
           { label: 'Renewable Share', value: (d.data.renewableShare * 100).toFixed(0) + '%', pct: d.data.renewableShare * 100 },
           { label: 'Revenue Exposure Score', value: d.score.toFixed(1), pct: d.score }
+        ];
+      } else if (d.tier === 'estimated') {
+        items = [
+          { label: 'Fossil Fuel Dependency (40%)', value: d.sub.fossilFuelDep.toFixed(1), pct: d.sub.fossilFuelDep },
+          { label: 'Economic Vulnerability (25%)', value: d.sub.economicVulnerability.toFixed(1), pct: d.sub.economicVulnerability },
+          { label: 'Energy Intensity Proxy (20%)', value: d.sub.energyIntensityProxy.toFixed(1), pct: d.sub.energyIntensityProxy },
+          { label: 'Electrification Gap (15%)', value: d.sub.electrificationGap.toFixed(1), pct: d.sub.electrificationGap }
         ];
       } else {
         items = [
@@ -2727,7 +2819,8 @@
     // Calculate GDP impact for each country
     var impacts = [];
     hzScored.forEach(function(d) {
-      if (d.isExporter) return; // skip exporters (they benefit)
+      if (d.isExporter) return;
+      if (d.tier === 'estimated') return; // no reliable GDP data
 
       var oilDep = d.sub.oilImportDep / 100;
       var intensity = d.data.energyIntensity / 5.0;
@@ -2865,7 +2958,7 @@
 
   // ── CSV Export ──
   function exportHzCSV() {
-    var headers = ['Rank', 'Country', 'ISO3', 'Exposure Score', 'Type', 'Oil Import Dep', 'Gulf Concentration', 'LNG Exposure', 'Reserve Gap', 'Transition Shield Gap', 'Economic Amplification', 'Gulf Oil Import Share', 'SPR Days', 'Renewable Share', 'Energy Intensity', 'GDP (Trillions)'];
+    var headers = ['Rank', 'Country', 'ISO3', 'Exposure Score', 'Tier', 'Type', 'Oil Import Dep', 'Gulf Concentration', 'LNG Exposure', 'Reserve Gap', 'Transition Shield Gap', 'Economic Amplification', 'Gulf Oil Import Share', 'SPR Days', 'Renewable Share', 'Energy Intensity', 'GDP (Trillions)'];
     var rows = [headers.join(',')];
 
     hzScored.forEach(function(d) {
@@ -2874,6 +2967,7 @@
         '"' + d.country + '"',
         d.iso3,
         d.score.toFixed(1),
+        d.tier || 'detailed',
         d.isExporter ? 'Exporter' : 'Importer',
         (d.sub.oilImportDep || 0).toFixed(1),
         (d.sub.gulfConcentration || 0).toFixed(1),
@@ -2882,10 +2976,10 @@
         (d.sub.transitionShield || 0).toFixed(1),
         (d.sub.economicAmplification || 0).toFixed(1),
         ((d.data.gulfOilImportShare || 0) * 100).toFixed(1),
-        d.data.sprDays >= 999 ? 'N/A' : d.data.sprDays,
+        d.data.sprDays >= 999 ? 'N/A' : (d.data.sprDays || 0),
         ((d.data.renewableShare || 0) * 100).toFixed(1),
-        d.data.energyIntensity,
-        d.data.gdpTrillions
+        d.data.energyIntensity || '',
+        d.data.gdpTrillions || ''
       ];
       rows.push(row.join(','));
     });
@@ -2906,16 +3000,38 @@
 
     calculateHormuzScores();
 
-    // Populate country selector
+    // Update dynamic count in section description
+    var descEl = document.querySelector('.hormuz-section .section-desc');
+    if (descEl) descEl.innerHTML = descEl.innerHTML.replace(/48 nations/, hzScored.length + ' nations');
+
+    // Populate country selector with optgroups
     var select = document.getElementById('hz-country-select');
     if (select) {
-      var sorted = hzScored.slice().sort(function(a, b) { return a.country.localeCompare(b.country); });
-      sorted.forEach(function(d) {
+      var detailed = hzScored.filter(function(d) { return d.tier !== 'estimated'; })
+                              .sort(function(a, b) { return a.country.localeCompare(b.country); });
+      var estimated = hzScored.filter(function(d) { return d.tier === 'estimated'; })
+                              .sort(function(a, b) { return a.country.localeCompare(b.country); });
+
+      var grp1 = document.createElement('optgroup');
+      grp1.label = 'Detailed (' + detailed.length + ')';
+      detailed.forEach(function(d) {
         var opt = document.createElement('option');
         opt.value = d.iso3;
         opt.textContent = d.country + ' (' + d.score.toFixed(1) + ')';
-        select.appendChild(opt);
+        grp1.appendChild(opt);
       });
+      select.appendChild(grp1);
+
+      var grp2 = document.createElement('optgroup');
+      grp2.label = 'Estimated (' + estimated.length + ')';
+      estimated.forEach(function(d) {
+        var opt = document.createElement('option');
+        opt.value = d.iso3;
+        opt.textContent = d.country + ' (' + d.score.toFixed(1) + ')';
+        grp2.appendChild(opt);
+      });
+      select.appendChild(grp2);
+
       // Default to highest-scored
       if (hzScored.length > 0) select.value = hzScored[0].iso3;
       select.addEventListener('change', renderHzDetail);
