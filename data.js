@@ -4563,3 +4563,72 @@ const REGION_MAP = {
   "SPM": "North America",
   "ANT": "North America"
 };
+
+// ── Strait of Hormuz Exposure Data ──
+// Sources: EIA, IEA, Energy Institute Statistical Review 2024, Visual Capitalist
+// oilConsumption/oilProduction in million barrels per day (mb/d)
+// gulfOilImportShare: fraction of oil imports from Hormuz-transit states
+// hormuzCrudeShare: this country's share of total Hormuz crude outflow
+// lngImportDep: LNG as fraction of total energy supply
+// hormuzLngShare: fraction of LNG imports transiting Hormuz
+// sprDays: strategic petroleum reserve in days of net imports (999 = exporter/N/A)
+// renewableShare: renewables as fraction of primary energy (0-1)
+// energyIntensity: MJ per USD of GDP
+// gdpTrillions: GDP in trillions USD
+var HORMUZ_DATA = [
+  // ── Asia-Pacific Importers ──
+  { iso3:'CHN', country:'China',         oilConsumption:16.0, oilProduction:4.2,  gulfOilImportShare:0.54, hormuzCrudeShare:0.275, lngImportDep:0.08, hormuzLngShare:0.15, sprDays:80,  renewableShare:0.16, energyIntensity:4.5, gdpTrillions:17.8, isExporter:false, bypassCapacity:0 },
+  { iso3:'IND', country:'India',         oilConsumption:5.3,  oilProduction:0.8,  gulfOilImportShare:0.62, hormuzCrudeShare:0.147, lngImportDep:0.04, hormuzLngShare:0.45, sprDays:65,  renewableShare:0.12, energyIntensity:4.8, gdpTrillions:3.7,  isExporter:false, bypassCapacity:0 },
+  { iso3:'JPN', country:'Japan',         oilConsumption:3.4,  oilProduction:0.01, gulfOilImportShare:0.92, hormuzCrudeShare:0.109, lngImportDep:0.22, hormuzLngShare:0.22, sprDays:175, renewableShare:0.12, energyIntensity:3.2, gdpTrillions:4.2,  isExporter:false, bypassCapacity:0 },
+  { iso3:'KOR', country:'South Korea',   oilConsumption:2.7,  oilProduction:0.01, gulfOilImportShare:0.82, hormuzCrudeShare:0.120, lngImportDep:0.18, hormuzLngShare:0.30, sprDays:120, renewableShare:0.08, energyIntensity:4.1, gdpTrillions:1.7,  isExporter:false, bypassCapacity:0 },
+  { iso3:'TWN', country:'Taiwan',        oilConsumption:1.0,  oilProduction:0.0,  gulfOilImportShare:0.74, hormuzCrudeShare:0.034, lngImportDep:0.16, hormuzLngShare:0.30, sprDays:90,  renewableShare:0.07, energyIntensity:3.8, gdpTrillions:0.8,  isExporter:false, bypassCapacity:0 },
+  { iso3:'THA', country:'Thailand',      oilConsumption:1.2,  oilProduction:0.3,  gulfOilImportShare:0.60, hormuzCrudeShare:0.020, lngImportDep:0.12, hormuzLngShare:0.10, sprDays:40,  renewableShare:0.14, energyIntensity:5.2, gdpTrillions:0.5,  isExporter:false, bypassCapacity:0 },
+  { iso3:'SGP', country:'Singapore',     oilConsumption:1.5,  oilProduction:0.0,  gulfOilImportShare:0.65, hormuzCrudeShare:0.015, lngImportDep:0.20, hormuzLngShare:0.08, sprDays:90,  renewableShare:0.03, energyIntensity:1.8, gdpTrillions:0.5,  isExporter:false, bypassCapacity:0 },
+  { iso3:'PHL', country:'Philippines',   oilConsumption:0.5,  oilProduction:0.01, gulfOilImportShare:0.55, hormuzCrudeShare:0.008, lngImportDep:0.0,  hormuzLngShare:0.0,  sprDays:0,   renewableShare:0.18, energyIntensity:3.1, gdpTrillions:0.4,  isExporter:false, bypassCapacity:0 },
+  { iso3:'IDN', country:'Indonesia',     oilConsumption:1.7,  oilProduction:0.6,  gulfOilImportShare:0.45, hormuzCrudeShare:0.012, lngImportDep:0.03, hormuzLngShare:0.02, sprDays:25,  renewableShare:0.20, energyIntensity:4.0, gdpTrillions:1.4,  isExporter:false, bypassCapacity:0 },
+  { iso3:'VNM', country:'Vietnam',       oilConsumption:0.5,  oilProduction:0.2,  gulfOilImportShare:0.30, hormuzCrudeShare:0.005, lngImportDep:0.02, hormuzLngShare:0.0,  sprDays:10,  renewableShare:0.25, energyIntensity:5.5, gdpTrillions:0.4,  isExporter:false, bypassCapacity:0 },
+  { iso3:'PAK', country:'Pakistan',      oilConsumption:0.5,  oilProduction:0.08, gulfOilImportShare:0.70, hormuzCrudeShare:0.010, lngImportDep:0.08, hormuzLngShare:0.35, sprDays:10,  renewableShare:0.08, energyIntensity:5.0, gdpTrillions:0.3,  isExporter:false, bypassCapacity:0 },
+  { iso3:'BGD', country:'Bangladesh',    oilConsumption:0.14, oilProduction:0.01, gulfOilImportShare:0.60, hormuzCrudeShare:0.003, lngImportDep:0.05, hormuzLngShare:0.15, sprDays:0,   renewableShare:0.06, energyIntensity:4.2, gdpTrillions:0.5,  isExporter:false, bypassCapacity:0 },
+  { iso3:'LKA', country:'Sri Lanka',     oilConsumption:0.09, oilProduction:0.0,  gulfOilImportShare:0.80, hormuzCrudeShare:0.002, lngImportDep:0.0,  hormuzLngShare:0.0,  sprDays:15,  renewableShare:0.22, energyIntensity:3.0, gdpTrillions:0.08, isExporter:false, bypassCapacity:0 },
+  // ── Europe ──
+  { iso3:'DEU', country:'Germany',       oilConsumption:2.1,  oilProduction:0.04, gulfOilImportShare:0.10, hormuzCrudeShare:0.010, lngImportDep:0.04, hormuzLngShare:0.05, sprDays:90,  renewableShare:0.22, energyIntensity:2.8, gdpTrillions:4.5,  isExporter:false, bypassCapacity:0 },
+  { iso3:'FRA', country:'France',        oilConsumption:1.5,  oilProduction:0.02, gulfOilImportShare:0.14, hormuzCrudeShare:0.008, lngImportDep:0.06, hormuzLngShare:0.05, sprDays:90,  renewableShare:0.21, energyIntensity:2.5, gdpTrillions:3.0,  isExporter:false, bypassCapacity:0 },
+  { iso3:'GBR', country:'United Kingdom',oilConsumption:1.4,  oilProduction:0.7,  gulfOilImportShare:0.08, hormuzCrudeShare:0.005, lngImportDep:0.10, hormuzLngShare:0.04, sprDays:90,  renewableShare:0.20, energyIntensity:2.3, gdpTrillions:3.3,  isExporter:false, bypassCapacity:0 },
+  { iso3:'ITA', country:'Italy',         oilConsumption:1.2,  oilProduction:0.1,  gulfOilImportShare:0.18, hormuzCrudeShare:0.009, lngImportDep:0.08, hormuzLngShare:0.08, sprDays:90,  renewableShare:0.22, energyIntensity:2.6, gdpTrillions:2.2,  isExporter:false, bypassCapacity:0 },
+  { iso3:'ESP', country:'Spain',         oilConsumption:1.2,  oilProduction:0.03, gulfOilImportShare:0.12, hormuzCrudeShare:0.006, lngImportDep:0.08, hormuzLngShare:0.06, sprDays:90,  renewableShare:0.24, energyIntensity:2.4, gdpTrillions:1.6,  isExporter:false, bypassCapacity:0 },
+  { iso3:'NLD', country:'Netherlands',   oilConsumption:0.9,  oilProduction:0.02, gulfOilImportShare:0.15, hormuzCrudeShare:0.005, lngImportDep:0.08, hormuzLngShare:0.04, sprDays:90,  renewableShare:0.15, energyIntensity:2.9, gdpTrillions:1.1,  isExporter:false, bypassCapacity:0 },
+  { iso3:'POL', country:'Poland',        oilConsumption:0.6,  oilProduction:0.02, gulfOilImportShare:0.05, hormuzCrudeShare:0.002, lngImportDep:0.04, hormuzLngShare:0.02, sprDays:90,  renewableShare:0.17, energyIntensity:3.4, gdpTrillions:0.8,  isExporter:false, bypassCapacity:0 },
+  { iso3:'TUR', country:'Turkey',        oilConsumption:1.0,  oilProduction:0.06, gulfOilImportShare:0.40, hormuzCrudeShare:0.018, lngImportDep:0.06, hormuzLngShare:0.12, sprDays:30,  renewableShare:0.18, energyIntensity:3.6, gdpTrillions:1.1,  isExporter:false, bypassCapacity:0 },
+  { iso3:'GRC', country:'Greece',        oilConsumption:0.3,  oilProduction:0.01, gulfOilImportShare:0.35, hormuzCrudeShare:0.004, lngImportDep:0.04, hormuzLngShare:0.06, sprDays:90,  renewableShare:0.25, energyIntensity:2.5, gdpTrillions:0.2,  isExporter:false, bypassCapacity:0 },
+  { iso3:'BEL', country:'Belgium',       oilConsumption:0.6,  oilProduction:0.0,  gulfOilImportShare:0.12, hormuzCrudeShare:0.003, lngImportDep:0.06, hormuzLngShare:0.04, sprDays:90,  renewableShare:0.14, energyIntensity:3.0, gdpTrillions:0.6,  isExporter:false, bypassCapacity:0 },
+  { iso3:'ISR', country:'Israel',        oilConsumption:0.23, oilProduction:0.0,  gulfOilImportShare:0.35, hormuzCrudeShare:0.003, lngImportDep:0.0,  hormuzLngShare:0.0,  sprDays:50,  renewableShare:0.10, energyIntensity:2.4, gdpTrillions:0.5,  isExporter:false, bypassCapacity:0 },
+  // ── Americas ──
+  { iso3:'USA', country:'United States', oilConsumption:20.0, oilProduction:13.0, gulfOilImportShare:0.06, hormuzCrudeShare:0.020, lngImportDep:0.0,  hormuzLngShare:0.0,  sprDays:120, renewableShare:0.13, energyIntensity:4.2, gdpTrillions:28.8, isExporter:false, bypassCapacity:0 },
+  { iso3:'CAN', country:'Canada',        oilConsumption:2.3,  oilProduction:5.7,  gulfOilImportShare:0.03, hormuzCrudeShare:0.002, lngImportDep:0.0,  hormuzLngShare:0.0,  sprDays:0,   renewableShare:0.28, energyIntensity:5.5, gdpTrillions:2.1,  isExporter:false, bypassCapacity:0 },
+  { iso3:'BRA', country:'Brazil',        oilConsumption:3.2,  oilProduction:3.4,  gulfOilImportShare:0.05, hormuzCrudeShare:0.003, lngImportDep:0.02, hormuzLngShare:0.02, sprDays:15,  renewableShare:0.48, energyIntensity:2.8, gdpTrillions:2.2,  isExporter:false, bypassCapacity:0 },
+  { iso3:'MEX', country:'Mexico',        oilConsumption:1.9,  oilProduction:1.9,  gulfOilImportShare:0.03, hormuzCrudeShare:0.001, lngImportDep:0.02, hormuzLngShare:0.0,  sprDays:5,   renewableShare:0.12, energyIntensity:3.5, gdpTrillions:1.8,  isExporter:false, bypassCapacity:0 },
+  { iso3:'ARG', country:'Argentina',     oilConsumption:0.6,  oilProduction:0.7,  gulfOilImportShare:0.0,  hormuzCrudeShare:0.0,   lngImportDep:0.0,  hormuzLngShare:0.0,  sprDays:0,   renewableShare:0.15, energyIntensity:3.0, gdpTrillions:0.6,  isExporter:false, bypassCapacity:0 },
+  { iso3:'CHL', country:'Chile',         oilConsumption:0.35, oilProduction:0.01, gulfOilImportShare:0.05, hormuzCrudeShare:0.001, lngImportDep:0.03, hormuzLngShare:0.02, sprDays:20,  renewableShare:0.35, energyIntensity:2.8, gdpTrillions:0.3,  isExporter:false, bypassCapacity:0 },
+  { iso3:'COL', country:'Colombia',      oilConsumption:0.35, oilProduction:0.75, gulfOilImportShare:0.0,  hormuzCrudeShare:0.0,   lngImportDep:0.0,  hormuzLngShare:0.0,  sprDays:5,   renewableShare:0.30, energyIntensity:2.6, gdpTrillions:0.3,  isExporter:false, bypassCapacity:0 },
+  // ── Africa ──
+  { iso3:'ZAF', country:'South Africa',  oilConsumption:0.6,  oilProduction:0.0,  gulfOilImportShare:0.40, hormuzCrudeShare:0.008, lngImportDep:0.0,  hormuzLngShare:0.0,  sprDays:30,  renewableShare:0.12, energyIntensity:5.8, gdpTrillions:0.4,  isExporter:false, bypassCapacity:0 },
+  { iso3:'EGY', country:'Egypt',         oilConsumption:0.7,  oilProduction:0.6,  gulfOilImportShare:0.10, hormuzCrudeShare:0.002, lngImportDep:0.0,  hormuzLngShare:0.0,  sprDays:20,  renewableShare:0.10, energyIntensity:5.0, gdpTrillions:0.4,  isExporter:false, bypassCapacity:0 },
+  { iso3:'NGA', country:'Nigeria',       oilConsumption:0.5,  oilProduction:1.3,  gulfOilImportShare:0.0,  hormuzCrudeShare:0.0,   lngImportDep:0.0,  hormuzLngShare:0.0,  sprDays:30,  renewableShare:0.15, energyIntensity:4.5, gdpTrillions:0.5,  isExporter:false, bypassCapacity:0 },
+  { iso3:'KEN', country:'Kenya',         oilConsumption:0.10, oilProduction:0.0,  gulfOilImportShare:0.60, hormuzCrudeShare:0.002, lngImportDep:0.0,  hormuzLngShare:0.0,  sprDays:10,  renewableShare:0.40, energyIntensity:3.5, gdpTrillions:0.1,  isExporter:false, bypassCapacity:0 },
+  { iso3:'MAR', country:'Morocco',       oilConsumption:0.3,  oilProduction:0.0,  gulfOilImportShare:0.25, hormuzCrudeShare:0.003, lngImportDep:0.04, hormuzLngShare:0.04, sprDays:30,  renewableShare:0.20, energyIntensity:3.0, gdpTrillions:0.1,  isExporter:false, bypassCapacity:0 },
+  // ── Oceania ──
+  { iso3:'AUS', country:'Australia',     oilConsumption:1.1,  oilProduction:0.3,  gulfOilImportShare:0.15, hormuzCrudeShare:0.005, lngImportDep:0.08, hormuzLngShare:0.02, sprDays:60,  renewableShare:0.18, energyIntensity:3.2, gdpTrillions:1.7,  isExporter:false, bypassCapacity:0 },
+  { iso3:'NZL', country:'New Zealand',   oilConsumption:0.16, oilProduction:0.02, gulfOilImportShare:0.10, hormuzCrudeShare:0.001, lngImportDep:0.0,  hormuzLngShare:0.0,  sprDays:20,  renewableShare:0.40, energyIntensity:2.8, gdpTrillions:0.3,  isExporter:false, bypassCapacity:0 },
+  // ── Low-Exposure Producers ──
+  { iso3:'RUS', country:'Russia',        oilConsumption:3.6,  oilProduction:10.5, gulfOilImportShare:0.0,  hormuzCrudeShare:0.0,   lngImportDep:0.0,  hormuzLngShare:0.0,  sprDays:0,   renewableShare:0.08, energyIntensity:7.0, gdpTrillions:1.9,  isExporter:false, bypassCapacity:0 },
+  { iso3:'NOR', country:'Norway',        oilConsumption:0.2,  oilProduction:2.0,  gulfOilImportShare:0.0,  hormuzCrudeShare:0.0,   lngImportDep:0.0,  hormuzLngShare:0.0,  sprDays:0,   renewableShare:0.70, energyIntensity:2.5, gdpTrillions:0.6,  isExporter:false, bypassCapacity:0 },
+  // ── Gulf Exporters ──
+  { iso3:'SAU', country:'Saudi Arabia',  oilConsumption:3.5,  oilProduction:10.5, gulfOilImportShare:0, hormuzCrudeShare:0.303, lngImportDep:0, hormuzLngShare:0, sprDays:999, renewableShare:0.02, energyIntensity:5.5, gdpTrillions:1.1, isExporter:true, bypassCapacity:7.0 },
+  { iso3:'ARE', country:'UAE',           oilConsumption:1.0,  oilProduction:4.0,  gulfOilImportShare:0, hormuzCrudeShare:0.201, lngImportDep:0, hormuzLngShare:0, sprDays:999, renewableShare:0.03, energyIntensity:4.2, gdpTrillions:0.5, isExporter:true, bypassCapacity:1.8 },
+  { iso3:'QAT', country:'Qatar',         oilConsumption:0.3,  oilProduction:1.8,  gulfOilImportShare:0, hormuzCrudeShare:0.030, lngImportDep:0, hormuzLngShare:0, sprDays:999, renewableShare:0.01, energyIntensity:6.5, gdpTrillions:0.2, isExporter:true, bypassCapacity:0 },
+  { iso3:'KWT', country:'Kuwait',        oilConsumption:0.5,  oilProduction:2.7,  gulfOilImportShare:0, hormuzCrudeShare:0.135, lngImportDep:0, hormuzLngShare:0, sprDays:999, renewableShare:0.01, energyIntensity:5.0, gdpTrillions:0.2, isExporter:true, bypassCapacity:0 },
+  { iso3:'IRQ', country:'Iraq',          oilConsumption:0.8,  oilProduction:4.5,  gulfOilImportShare:0, hormuzCrudeShare:0.226, lngImportDep:0, hormuzLngShare:0, sprDays:999, renewableShare:0.02, energyIntensity:6.0, gdpTrillions:0.3, isExporter:true, bypassCapacity:0 },
+  { iso3:'IRN', country:'Iran',          oilConsumption:1.9,  oilProduction:3.2,  gulfOilImportShare:0, hormuzCrudeShare:0.040, lngImportDep:0, hormuzLngShare:0, sprDays:999, renewableShare:0.04, energyIntensity:7.0, gdpTrillions:0.4, isExporter:true, bypassCapacity:0 },
+  { iso3:'BHR', country:'Bahrain',       oilConsumption:0.05, oilProduction:0.2,  gulfOilImportShare:0, hormuzCrudeShare:0.005, lngImportDep:0, hormuzLngShare:0, sprDays:999, renewableShare:0.01, energyIntensity:5.8, gdpTrillions:0.04,isExporter:true, bypassCapacity:0 },
+  { iso3:'OMN', country:'Oman',          oilConsumption:0.2,  oilProduction:1.0,  gulfOilImportShare:0, hormuzCrudeShare:0.040, lngImportDep:0, hormuzLngShare:0, sprDays:999, renewableShare:0.02, energyIntensity:5.0, gdpTrillions:0.1, isExporter:true, bypassCapacity:0 }
+];

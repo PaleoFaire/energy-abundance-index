@@ -2243,6 +2243,723 @@
     }
   }
 
+  // ═══════════════════════════════════════════════════════
+  // ── Hormuz Exposure Index ──
+  // ═══════════════════════════════════════════════════════
+
+  var hzScored = [];  // calculated once by initHormuz
+  var hzMap = null;   // Leaflet instance (lazy)
+  var hzGeoLayer = null;
+  var hzMapInited = false;
+
+  // Danger-scale color (high score = more exposed = redder)
+  function hzScoreColor(s) {
+    if (s == null) return '#666';
+    if (s >= 80) return '#ef4444';
+    if (s >= 60) return '#f97316';
+    if (s >= 40) return '#f59e0b';
+    if (s >= 20) return '#84cc16';
+    return '#22c55e';
+  }
+
+  function hzScoreClass(s) {
+    if (s == null) return '';
+    if (s >= 80) return 'hz-score-critical';
+    if (s >= 60) return 'hz-score-high';
+    if (s >= 40) return 'hz-score-moderate';
+    if (s >= 20) return 'hz-score-low';
+    return 'hz-score-insulated';
+  }
+
+  function hzScoreLabel(s) {
+    if (s >= 80) return 'Critical';
+    if (s >= 60) return 'High';
+    if (s >= 40) return 'Moderate';
+    if (s >= 20) return 'Low';
+    return 'Insulated';
+  }
+
+  // Choropleth color for map (continuous gradient)
+  function hzCountryColor(s) {
+    if (s == null) return '#1a1a1a';
+    if (s >= 80) { return lerpColor('#f97316', '#ef4444', (s - 80) / 20); }
+    if (s >= 60) { return lerpColor('#f59e0b', '#f97316', (s - 60) / 20); }
+    if (s >= 40) { return lerpColor('#84cc16', '#f59e0b', (s - 40) / 20); }
+    if (s >= 20) { return lerpColor('#22c55e', '#84cc16', (s - 20) / 20); }
+    return lerpColor('#16a34a', '#22c55e', s / 20);
+  }
+
+  function calculateHormuzScores() {
+    if (typeof HORMUZ_DATA === 'undefined') return;
+
+    // Find min/max energyIntensity for normalization
+    var intensities = [];
+    HORMUZ_DATA.forEach(function(d) {
+      if (!d.isExporter) intensities.push(d.energyIntensity);
+    });
+    var eiMin = Math.min.apply(null, intensities);
+    var eiMax = Math.max.apply(null, intensities);
+    var eiRange = eiMax - eiMin || 1;
+
+    hzScored = HORMUZ_DATA.map(function(d) {
+      var sub = {};
+
+      if (d.isExporter) {
+        // Gulf exporters: revenue exposure score
+        var totalExport = d.oilProduction - d.oilConsumption;
+        var exportFrac = totalExport > 0 ? d.hormuzCrudeShare / (d.oilProduction / 20) : 0;
+        exportFrac = Math.min(exportFrac, 1);
+        var bypassRatio = d.bypassCapacity > 0 ? Math.min(d.bypassCapacity / d.oilProduction, 1) : 0;
+        sub.oilImportDep = 0;
+        sub.gulfConcentration = 0;
+        sub.lngExposure = 0;
+        sub.reserveGap = 0;
+        sub.transitionShield = (1 - d.renewableShare) * 100;
+        sub.economicAmplification = 0;
+        var compositeRaw = exportFrac * (1 - bypassRatio) * 60;
+        var composite = Math.min(Math.max(compositeRaw, 0), 60);
+
+        // Override sub-scores for display (export-specific)
+        sub.exportExposure = composite;
+        sub.bypassProtection = bypassRatio * 100;
+
+        return {
+          iso3: d.iso3,
+          country: d.country,
+          score: Math.round(composite * 10) / 10,
+          sub: sub,
+          isExporter: true,
+          data: d
+        };
+      }
+
+      // Importers: 6-component formula
+      var oilDep = d.oilConsumption > 0 ? Math.max(0, (d.oilConsumption - d.oilProduction) / d.oilConsumption) : 0;
+      sub.oilImportDep = oilDep * 100;
+
+      sub.gulfConcentration = d.gulfOilImportShare * oilDep * 100;
+
+      var lngRaw = d.lngImportDep * d.hormuzLngShare * 5;
+      sub.lngExposure = Math.min(lngRaw, 1) * 100;
+
+      var sprCapped = Math.min(d.sprDays, 180);
+      sub.reserveGap = (1 - sprCapped / 180) * 100;
+
+      sub.transitionShield = (1 - d.renewableShare) * 100;
+
+      var eiNorm = eiRange > 0 ? (d.energyIntensity - eiMin) / eiRange : 0.5;
+      sub.economicAmplification = eiNorm * 100;
+
+      var composite = sub.oilImportDep * 0.20
+                    + sub.gulfConcentration * 0.30
+                    + sub.lngExposure * 0.10
+                    + sub.reserveGap * 0.15
+                    + sub.transitionShield * 0.10
+                    + sub.economicAmplification * 0.15;
+
+      composite = Math.min(Math.max(composite, 0), 100);
+
+      return {
+        iso3: d.iso3,
+        country: d.country,
+        score: Math.round(composite * 10) / 10,
+        sub: sub,
+        isExporter: false,
+        data: d
+      };
+    });
+
+    // Sort by score descending and assign ranks
+    hzScored.sort(function(a, b) { return b.score - a.score; });
+    hzScored.forEach(function(d, i) { d.rank = i + 1; });
+  }
+
+  // Build lookup
+  function hzByISO(iso3) {
+    for (var i = 0; i < hzScored.length; i++) {
+      if (hzScored[i].iso3 === iso3) return hzScored[i];
+    }
+    return null;
+  }
+
+  // ── Tab Switching ──
+  function switchHzTab(tabName) {
+    var tabs = document.querySelectorAll('.hz-tab');
+    var panels = document.querySelectorAll('.hz-panel');
+    tabs.forEach(function(t) { t.classList.toggle('active', t.getAttribute('data-hz-tab') === tabName); });
+    panels.forEach(function(p) { p.style.display = 'none'; });
+    var target = document.getElementById('hz-' + tabName + '-panel');
+    if (target) target.style.display = '';
+
+    // Lazy-init map
+    if (tabName === 'map' && !hzMapInited) {
+      hzMapInited = true;
+      setTimeout(initHzMap, 100);
+    }
+
+    // Refresh detail if switching to it
+    if (tabName === 'detail') {
+      renderHzDetail();
+    }
+
+    // Refresh scenario
+    if (tabName === 'scenario') {
+      setTimeout(drawHzScenarioChart, 100);
+    }
+  }
+
+  // ── Rankings Table ──
+  function renderHzRankings() {
+    var tbody = document.getElementById('hz-table-body');
+    if (!tbody) return;
+
+    var search = (document.getElementById('hz-search').value || '').toLowerCase();
+    var sortVal = document.getElementById('hz-sort').value;
+    var typeFilter = document.getElementById('hz-type-filter').value;
+
+    var filtered = hzScored.filter(function(d) {
+      if (search && d.country.toLowerCase().indexOf(search) === -1) return false;
+      if (typeFilter === 'importers' && d.isExporter) return false;
+      if (typeFilter === 'exporters' && !d.isExporter) return false;
+      return true;
+    });
+
+    // Sort
+    filtered.sort(function(a, b) {
+      switch (sortVal) {
+        case 'score-asc': return a.score - b.score;
+        case 'name-asc': return a.country.localeCompare(b.country);
+        case 'gulf-desc': return (b.data.gulfOilImportShare || 0) - (a.data.gulfOilImportShare || 0);
+        case 'reserve-asc': return (a.data.sprDays || 0) - (b.data.sprDays || 0);
+        default: return b.score - a.score;
+      }
+    });
+
+    var count = document.getElementById('hz-results-count');
+    if (count) count.textContent = filtered.length + ' countr' + (filtered.length === 1 ? 'y' : 'ies');
+
+    var html = '';
+    filtered.forEach(function(d) {
+      var cls = hzScoreClass(d.score);
+      var badge = d.isExporter ? '<span class="hz-exporter-badge">Exporter</span>' : '';
+      var oilDep = d.isExporter ? '—' : (d.sub.oilImportDep || 0).toFixed(0) + '%';
+      var gulf = d.isExporter ? '—' : ((d.data.gulfOilImportShare || 0) * 100).toFixed(0) + '%';
+      var spr = d.data.sprDays >= 999 ? '∞' : (d.data.sprDays || 0);
+      var renew = ((d.data.renewableShare || 0) * 100).toFixed(0) + '%';
+
+      html += '<tr>'
+        + '<td class="td-rank">' + d.rank + '</td>'
+        + '<td class="td-country">' + d.country + badge + '</td>'
+        + '<td class="hz-score-cell ' + cls + '">' + d.score.toFixed(1) + '</td>'
+        + '<td class="hz-bar-cell"><div class="hz-bar-track"><div class="hz-bar-fill" style="width:' + d.score + '%;background:' + hzScoreColor(d.score) + '"></div></div></td>'
+        + '<td class="hz-detail-cell">' + oilDep + '</td>'
+        + '<td class="hz-detail-cell">' + gulf + '</td>'
+        + '<td class="hz-detail-cell">' + spr + '</td>'
+        + '<td class="hz-detail-cell">' + renew + '</td>'
+        + '</tr>';
+    });
+    tbody.innerHTML = html;
+  }
+
+  // ── Map ──
+  function initHzMap() {
+    var container = document.getElementById('hz-world-map');
+    if (!container || hzMap) return;
+
+    hzMap = L.map('hz-world-map', {
+      center: [25, 55],
+      zoom: 3,
+      minZoom: 2,
+      maxZoom: 7,
+      zoomControl: true,
+      attributionControl: false,
+      worldCopyJump: true
+    });
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
+      subdomains: 'abcd', maxZoom: 19
+    }).addTo(hzMap);
+
+    hzMap.createPane('labels');
+    hzMap.getPane('labels').style.zIndex = 450;
+    hzMap.getPane('labels').style.pointerEvents = 'none';
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png', {
+      subdomains: 'abcd', maxZoom: 19, pane: 'labels'
+    }).addTo(hzMap);
+
+    // Load same TopoJSON (cached by browser)
+    fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
+      .then(function(r) { return r.json(); })
+      .then(function(topology) {
+        var geojson = topojson.feature(topology, topology.objects.countries);
+        geojson.features.forEach(function(f) {
+          var numId = String(f.id || (f.properties && f.properties.id) || '');
+          f.properties = f.properties || {};
+          f.properties.ISO_A3 = NUM_TO_ISO3[numId] || numId;
+        });
+        geojson = fixAntimeridian(geojson);
+        renderHzChoropleth(geojson);
+      })
+      .catch(function(err) { console.warn('Hormuz map load failed:', err); });
+  }
+
+  function renderHzChoropleth(geojson) {
+    var tooltip = document.getElementById('hz-map-tooltip');
+
+    hzGeoLayer = L.geoJSON(geojson, {
+      style: function(feature) {
+        var iso = feature.properties.ISO_A3 || '';
+        var d = hzByISO(iso);
+        return {
+          fillColor: d ? hzCountryColor(d.score) : '#1a1a1a',
+          weight: 0.5,
+          color: 'rgba(255,255,255,0.1)',
+          fillOpacity: d ? 0.85 : 0.3
+        };
+      },
+      onEachFeature: function(feature, layer) {
+        var iso = feature.properties.ISO_A3 || '';
+        var d = hzByISO(iso);
+        if (!d) return;
+
+        layer.on('mouseover', function(e) {
+          this.setStyle({ weight: 2, color: '#fff', fillOpacity: 1 });
+          if (tooltip) {
+            var lbl = d.isExporter ? 'Exporter' : hzScoreLabel(d.score);
+            tooltip.innerHTML = '<strong>' + d.country + '</strong><br>'
+              + 'Exposure: <span style="color:' + hzScoreColor(d.score) + ';font-weight:700">' + d.score.toFixed(1) + '</span>'
+              + ' (' + lbl + ')<br>'
+              + 'Rank: #' + d.rank + ' of 48';
+            tooltip.style.display = 'block';
+          }
+        });
+
+        layer.on('mousemove', function(e) {
+          if (tooltip) {
+            var container = document.getElementById('hz-world-map');
+            var rect = container.getBoundingClientRect();
+            tooltip.style.left = (e.originalEvent.clientX - rect.left + 12) + 'px';
+            tooltip.style.top = (e.originalEvent.clientY - rect.top - 30) + 'px';
+          }
+        });
+
+        layer.on('mouseout', function(e) {
+          hzGeoLayer.resetStyle(this);
+          if (tooltip) tooltip.style.display = 'none';
+        });
+      }
+    }).addTo(hzMap);
+
+    setTimeout(function() { hzMap.invalidateSize(); }, 200);
+  }
+
+  // ── Radar / Spider Chart ──
+  function drawHzRadar(canvasId, subScores) {
+    var canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var dpr = window.devicePixelRatio || 1;
+
+    var size = Math.min(canvas.parentElement.offsetWidth, 400);
+    canvas.width = size * dpr;
+    canvas.height = size * dpr;
+    canvas.style.width = size + 'px';
+    canvas.style.height = size + 'px';
+    ctx.scale(dpr, dpr);
+
+    var cx = size / 2;
+    var cy = size / 2;
+    var radius = size * 0.38;
+
+    var labels = ['Oil Import\nDependency', 'Gulf\nConcentration', 'LNG\nExposure', 'Reserve\nGap', 'Transition\n(lack of)', 'Economic\nAmplification'];
+    var keys = ['oilImportDep', 'gulfConcentration', 'lngExposure', 'reserveGap', 'transitionShield', 'economicAmplification'];
+    var n = labels.length;
+
+    ctx.clearRect(0, 0, size, size);
+
+    // Draw concentric rings
+    for (var ring = 1; ring <= 5; ring++) {
+      var r = radius * ring / 5;
+      ctx.beginPath();
+      for (var i = 0; i <= n; i++) {
+        var angle = (Math.PI * 2 / n) * i - Math.PI / 2;
+        var x = cx + Math.cos(angle) * r;
+        var y = cy + Math.sin(angle) * r;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    // Draw spokes
+    for (var i = 0; i < n; i++) {
+      var angle = (Math.PI * 2 / n) * i - Math.PI / 2;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + Math.cos(angle) * radius, cy + Math.sin(angle) * radius);
+      ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+      ctx.stroke();
+    }
+
+    // Draw data polygon
+    ctx.beginPath();
+    for (var i = 0; i < n; i++) {
+      var val = Math.min((subScores[keys[i]] || 0) / 100, 1);
+      var angle = (Math.PI * 2 / n) * i - Math.PI / 2;
+      var x = cx + Math.cos(angle) * radius * val;
+      var y = cy + Math.sin(angle) * radius * val;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(249,115,22,0.2)';
+    ctx.fill();
+    ctx.strokeStyle = '#f97316';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Draw data points
+    for (var i = 0; i < n; i++) {
+      var val = Math.min((subScores[keys[i]] || 0) / 100, 1);
+      var angle = (Math.PI * 2 / n) * i - Math.PI / 2;
+      var x = cx + Math.cos(angle) * radius * val;
+      var y = cy + Math.sin(angle) * radius * val;
+      ctx.beginPath();
+      ctx.arc(x, y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = '#f97316';
+      ctx.fill();
+      ctx.strokeStyle = '#0F172A';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    // Labels
+    ctx.fillStyle = 'rgba(240,240,250,0.65)';
+    ctx.font = '11px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    for (var i = 0; i < n; i++) {
+      var angle = (Math.PI * 2 / n) * i - Math.PI / 2;
+      var lx = cx + Math.cos(angle) * (radius + 28);
+      var ly = cy + Math.sin(angle) * (radius + 28);
+      var lines = labels[i].split('\n');
+      lines.forEach(function(line, li) {
+        ctx.fillText(line, lx, ly + li * 13 - (lines.length - 1) * 6);
+      });
+    }
+
+    // Ring value labels (20, 40, 60, 80, 100)
+    ctx.fillStyle = 'rgba(240,240,250,0.25)';
+    ctx.font = '9px Inter, sans-serif';
+    ctx.textAlign = 'left';
+    for (var ring = 1; ring <= 5; ring++) {
+      var r = radius * ring / 5;
+      ctx.fillText(ring * 20, cx + 3, cy - r + 10);
+    }
+  }
+
+  // ── Country Detail ──
+  function renderHzDetail() {
+    var select = document.getElementById('hz-country-select');
+    if (!select) return;
+
+    var iso = select.value;
+    var d = hzByISO(iso);
+    if (!d) return;
+
+    // Draw radar
+    drawHzRadar('hz-radar-chart', d.sub);
+
+    // Header
+    var header = document.getElementById('hz-detail-header');
+    if (header) {
+      var lbl = d.isExporter ? 'Exporter' : hzScoreLabel(d.score);
+      header.innerHTML = '<div class="hz-detail-score-big ' + hzScoreClass(d.score) + '">' + d.score.toFixed(1) + '</div>'
+        + '<div class="hz-detail-score-label ' + hzScoreClass(d.score) + '">' + lbl + '</div>'
+        + '<div class="hz-detail-rank">Rank #' + d.rank + ' of 48 countries</div>';
+    }
+
+    // Breakdown bars
+    var breakdown = document.getElementById('hz-detail-breakdown');
+    if (breakdown) {
+      var items;
+      if (d.isExporter) {
+        items = [
+          { label: 'Hormuz Crude Share', value: (d.data.hormuzCrudeShare * 100).toFixed(1), pct: d.data.hormuzCrudeShare * 100 / 0.35 * 100 },
+          { label: 'Bypass Protection', value: (d.sub.bypassProtection || 0).toFixed(0) + '%', pct: d.sub.bypassProtection || 0 },
+          { label: 'Renewable Share', value: (d.data.renewableShare * 100).toFixed(0) + '%', pct: d.data.renewableShare * 100 },
+          { label: 'Revenue Exposure Score', value: d.score.toFixed(1), pct: d.score }
+        ];
+      } else {
+        items = [
+          { label: 'Oil Import Dependency (20%)', value: d.sub.oilImportDep.toFixed(1), pct: d.sub.oilImportDep },
+          { label: 'Gulf Concentration (30%)', value: d.sub.gulfConcentration.toFixed(1), pct: d.sub.gulfConcentration },
+          { label: 'LNG Exposure (10%)', value: d.sub.lngExposure.toFixed(1), pct: d.sub.lngExposure },
+          { label: 'Strategic Reserve Gap (15%)', value: d.sub.reserveGap.toFixed(1), pct: d.sub.reserveGap },
+          { label: 'Transition Shield Gap (10%)', value: d.sub.transitionShield.toFixed(1), pct: d.sub.transitionShield },
+          { label: 'Economic Amplification (15%)', value: d.sub.economicAmplification.toFixed(1), pct: d.sub.economicAmplification }
+        ];
+      }
+
+      var bhtml = '';
+      items.forEach(function(item) {
+        var pctClamped = Math.min(Math.max(item.pct, 0), 100);
+        bhtml += '<div class="hz-breakdown-item">'
+          + '<div class="hz-breakdown-label"><span>' + item.label + '</span><span class="hz-breakdown-value">' + item.value + '</span></div>'
+          + '<div class="hz-breakdown-bar-track"><div class="hz-breakdown-bar-fill" style="width:' + pctClamped + '%;background:' + hzScoreColor(pctClamped) + '"></div></div>'
+          + '</div>';
+      });
+      breakdown.innerHTML = bhtml;
+    }
+  }
+
+  // ── Oil Price Scenario Chart ──
+  function drawHzScenarioChart() {
+    var canvas = document.getElementById('hz-scenario-chart');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var dpr = window.devicePixelRatio || 1;
+
+    var price = parseFloat(document.getElementById('hz-price-slider').value) || 130;
+    var delta = price - 80; // $80 baseline
+
+    // Calculate GDP impact for each country
+    var impacts = [];
+    hzScored.forEach(function(d) {
+      if (d.isExporter) return; // skip exporters (they benefit)
+
+      var oilDep = d.sub.oilImportDep / 100;
+      var intensity = d.data.energyIntensity / 5.0;
+      var gdpImpact = (delta / 10) * 0.5 * oilDep * intensity;
+      gdpImpact = Math.min(gdpImpact, 15); // cap at 15%
+
+      impacts.push({
+        country: d.country,
+        iso3: d.iso3,
+        gdpImpact: gdpImpact,
+        gdp: d.data.gdpTrillions,
+        score: d.score
+      });
+    });
+
+    impacts.sort(function(a, b) { return b.gdpImpact - a.gdpImpact; });
+    var top = impacts.slice(0, 20);
+
+    // Sizing
+    var rect = canvas.parentElement.getBoundingClientRect();
+    var W = rect.width;
+    var barH = 28;
+    var gap = 6;
+    var pad = { top: 20, right: 60, bottom: 40, left: 120 };
+    var H = pad.top + top.length * (barH + gap) + pad.bottom;
+
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.scale(dpr, dpr);
+
+    ctx.clearRect(0, 0, W, H);
+
+    var plotW = W - pad.left - pad.right;
+    var maxImpact = Math.max.apply(null, top.map(function(d) { return d.gdpImpact; }));
+    if (maxImpact <= 0) maxImpact = 1;
+
+    // Grid lines
+    var gridSteps = [0, 2, 4, 6, 8, 10, 12, 14].filter(function(v) { return v <= maxImpact * 1.1; });
+    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+    ctx.fillStyle = 'rgba(240,240,250,0.3)';
+    ctx.font = '10px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    gridSteps.forEach(function(v) {
+      var x = pad.left + (v / (maxImpact * 1.1)) * plotW;
+      ctx.beginPath();
+      ctx.moveTo(x, pad.top);
+      ctx.lineTo(x, H - pad.bottom);
+      ctx.stroke();
+      ctx.fillText(v.toFixed(0) + '%', x, H - pad.bottom + 16);
+    });
+
+    // X axis label
+    ctx.fillStyle = 'rgba(240,240,250,0.4)';
+    ctx.font = '11px Inter, sans-serif';
+    ctx.fillText('Estimated GDP Impact (%)', pad.left + plotW / 2, H - 4);
+
+    // Bars
+    var barData = [];
+    top.forEach(function(d, i) {
+      var y = pad.top + i * (barH + gap);
+      var barW = (d.gdpImpact / (maxImpact * 1.1)) * plotW;
+      var color = hzScoreColor(d.score);
+
+      // Bar
+      ctx.fillStyle = color;
+      ctx.globalAlpha = 0.85;
+      ctx.beginPath();
+      var r = 4;
+      ctx.moveTo(pad.left, y);
+      ctx.lineTo(pad.left + barW - r, y);
+      ctx.quadraticCurveTo(pad.left + barW, y, pad.left + barW, y + r);
+      ctx.lineTo(pad.left + barW, y + barH - r);
+      ctx.quadraticCurveTo(pad.left + barW, y + barH, pad.left + barW - r, y + barH);
+      ctx.lineTo(pad.left, y + barH);
+      ctx.closePath();
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // Value label
+      ctx.fillStyle = 'rgba(240,240,250,0.8)';
+      ctx.font = '11px Inter, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(d.gdpImpact.toFixed(1) + '%', pad.left + barW + 6, y + barH / 2 + 4);
+
+      // Country label
+      ctx.fillStyle = 'rgba(240,240,250,0.7)';
+      ctx.font = '12px Inter, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(d.country, pad.left - 8, y + barH / 2 + 4);
+
+      barData.push({ x: pad.left, y: y, w: barW, h: barH, d: d });
+    });
+
+    // Store bar data for hover
+    canvas._hzBars = barData;
+    canvas._hzW = W;
+    canvas._hzH = H;
+    canvas._hzPad = pad;
+  }
+
+  function bindHzScenarioHover() {
+    var canvas = document.getElementById('hz-scenario-chart');
+    if (!canvas) return;
+    var tooltip = document.querySelector('.hz-scenario-tooltip');
+
+    canvas.addEventListener('mousemove', function(e) {
+      if (!canvas._hzBars || !tooltip) return;
+      var rect = canvas.getBoundingClientRect();
+      var dpr = window.devicePixelRatio || 1;
+      var mx = (e.clientX - rect.left);
+      var my = (e.clientY - rect.top);
+      var hit = null;
+      canvas._hzBars.forEach(function(b) {
+        if (mx >= b.x && mx <= b.x + b.w + 50 && my >= b.y && my <= b.y + b.h) hit = b;
+      });
+      if (hit) {
+        var dollarLoss = (hit.d.gdpImpact / 100) * hit.d.gdp * 1000;
+        tooltip.innerHTML = '<strong>' + hit.d.country + '</strong><br>'
+          + 'GDP Impact: ' + hit.d.gdpImpact.toFixed(2) + '%<br>'
+          + 'Est. Loss: $' + dollarLoss.toFixed(0) + 'B';
+        tooltip.style.display = 'block';
+        tooltip.style.left = (mx + 12) + 'px';
+        tooltip.style.top = (my - 10) + 'px';
+      } else {
+        tooltip.style.display = 'none';
+      }
+    });
+
+    canvas.addEventListener('mouseleave', function() {
+      if (tooltip) tooltip.style.display = 'none';
+    });
+  }
+
+  // ── CSV Export ──
+  function exportHzCSV() {
+    var headers = ['Rank', 'Country', 'ISO3', 'Exposure Score', 'Type', 'Oil Import Dep', 'Gulf Concentration', 'LNG Exposure', 'Reserve Gap', 'Transition Shield Gap', 'Economic Amplification', 'Gulf Oil Import Share', 'SPR Days', 'Renewable Share', 'Energy Intensity', 'GDP (Trillions)'];
+    var rows = [headers.join(',')];
+
+    hzScored.forEach(function(d) {
+      var row = [
+        d.rank,
+        '"' + d.country + '"',
+        d.iso3,
+        d.score.toFixed(1),
+        d.isExporter ? 'Exporter' : 'Importer',
+        (d.sub.oilImportDep || 0).toFixed(1),
+        (d.sub.gulfConcentration || 0).toFixed(1),
+        (d.sub.lngExposure || 0).toFixed(1),
+        (d.sub.reserveGap || 0).toFixed(1),
+        (d.sub.transitionShield || 0).toFixed(1),
+        (d.sub.economicAmplification || 0).toFixed(1),
+        ((d.data.gulfOilImportShare || 0) * 100).toFixed(1),
+        d.data.sprDays >= 999 ? 'N/A' : d.data.sprDays,
+        ((d.data.renewableShare || 0) * 100).toFixed(1),
+        d.data.energyIntensity,
+        d.data.gdpTrillions
+      ];
+      rows.push(row.join(','));
+    });
+
+    var csv = rows.join('\n');
+    var blob = new Blob([csv], { type: 'text/csv' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'hormuz-exposure-index.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // ── Master Init ──
+  function initHormuz() {
+    if (typeof HORMUZ_DATA === 'undefined' || !document.getElementById('hormuz')) return;
+
+    calculateHormuzScores();
+
+    // Populate country selector
+    var select = document.getElementById('hz-country-select');
+    if (select) {
+      var sorted = hzScored.slice().sort(function(a, b) { return a.country.localeCompare(b.country); });
+      sorted.forEach(function(d) {
+        var opt = document.createElement('option');
+        opt.value = d.iso3;
+        opt.textContent = d.country + ' (' + d.score.toFixed(1) + ')';
+        select.appendChild(opt);
+      });
+      // Default to highest-scored
+      if (hzScored.length > 0) select.value = hzScored[0].iso3;
+      select.addEventListener('change', renderHzDetail);
+    }
+
+    // Tab switching
+    document.querySelectorAll('.hz-tab').forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        switchHzTab(this.getAttribute('data-hz-tab'));
+      });
+    });
+
+    // Rankings
+    renderHzRankings();
+
+    // Search/sort/filter
+    var searchEl = document.getElementById('hz-search');
+    if (searchEl) searchEl.addEventListener('input', renderHzRankings);
+    var sortEl = document.getElementById('hz-sort');
+    if (sortEl) sortEl.addEventListener('change', renderHzRankings);
+    var typeEl = document.getElementById('hz-type-filter');
+    if (typeEl) typeEl.addEventListener('change', renderHzRankings);
+
+    // CSV export
+    var exportBtn = document.getElementById('hz-export-csv');
+    if (exportBtn) exportBtn.addEventListener('click', exportHzCSV);
+
+    // Price slider
+    var slider = document.getElementById('hz-price-slider');
+    var priceDisplay = document.getElementById('hz-price-value');
+    if (slider) {
+      slider.addEventListener('input', function() {
+        if (priceDisplay) priceDisplay.textContent = '$' + this.value;
+        drawHzScenarioChart();
+      });
+    }
+
+    // Bind scenario hover
+    bindHzScenarioHover();
+
+    // Render initial detail
+    setTimeout(function() { renderHzDetail(); }, 200);
+  }
+
   // ── Initialization ──
   function init() {
     buildGlanceLists();
@@ -2254,6 +2971,7 @@
     initLcoe();
     initConverter();
     initPerspective();
+    initHormuz();
     buildRegional();
     initReadingProgress();
     initBackToTop();
@@ -2280,6 +2998,12 @@
         drawCalcChart();
         drawLcoeChart();
         drawLcoeHistory();
+        if (document.getElementById('hz-scenario-panel') && document.getElementById('hz-scenario-panel').style.display !== 'none') {
+          drawHzScenarioChart();
+        }
+        if (document.getElementById('hz-detail-panel') && document.getElementById('hz-detail-panel').style.display !== 'none') {
+          renderHzDetail();
+        }
       }, 200);
     });
   }
